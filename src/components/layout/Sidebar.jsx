@@ -21,9 +21,8 @@ const Sidebar = ({ isOpen, toggleSidebar, onLogout }) => {
   return (
     <>
       <aside
-        className={`fixed top-0 left-0 h-screen w-64 bg-white border-r border-gray-200 p-4 z-40 shadow-lg transition-transform duration-300 overflow-y-auto ${
-          isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        }`}
+        className={`fixed top-0 left-0 h-screen w-64 bg-white border-r border-gray-200 p-4 z-40 shadow-lg transition-transform duration-300 overflow-y-auto flex flex-col ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          }`}
       >
         {/* Logo/Brand Section */}
         <div className="flex items-center justify-center mb-5 pb-4 border-b-2 border-gray-200">
@@ -50,18 +49,17 @@ const Sidebar = ({ isOpen, toggleSidebar, onLogout }) => {
           </div>
         </div>
 
-        {/* Navigation Menu */}
-        <nav>
-          <ul className="space-y-1.5 mb-20 list-none p-0 m-0">
+        {/* Navigation Menu - Reduced bottom padding */}
+        <nav className="flex-1 pb-4">
+          <ul className="space-y-1.5 list-none p-0 m-0">
             {menuItems.map((item) => (
               <li key={item.path}>
                 <Link
                   to={item.path}
-                  className={`flex items-center gap-2.5 px-3.5 py-2.5 no-underline rounded-md text-sm font-medium transition-all duration-200 ${
-                    location.pathname === item.path
+                  className={`flex items-center gap-2.5 px-3.5 py-2.5 no-underline rounded-md text-sm font-medium transition-all duration-200 ${location.pathname === item.path
                       ? 'bg-gradient-to-br from-teal-400 to-teal-700 text-white shadow-md'
                       : 'text-gray-600 hover:bg-cyan-50 hover:text-teal-500 hover:translate-x-1'
-                  }`}
+                    }`}
                   onClick={() => {
                     // Close mobile sidebar on navigation
                     if (window.innerWidth < 1024) {
@@ -77,14 +75,17 @@ const Sidebar = ({ isOpen, toggleSidebar, onLogout }) => {
           </ul>
         </nav>
 
-        {/* Logout Button */}
-        <button
-          onClick={onLogout}
-          className="absolute bottom-4 left-4 right-4 flex items-center justify-center gap-2 py-2.5 px-2.5 bg-gradient-to-br from-red-500 to-red-700 text-white border-none rounded-md text-sm font-semibold cursor-pointer hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200"
-        >
-          <i className="fas fa-sign-out-alt text-base"></i>
-          <span>Logout</span>
-        </button>
+        {/* Logout Button - Reduced top padding */}
+        <div className="mt-auto pt-2 border-t border-gray-200">
+          <button
+            onClick={onLogout}
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-2.5 bg-gradient-to-br from-red-500 to-red-700 text-white border-none rounded-md text-sm font-semibold cursor-pointer hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200"
+          >
+            <i className="fas fa-sign-out-alt text-base"></i>
+            <span>Logout</span>
+          </button>
+        </div>
+
       </aside>
 
       {/* Custom Scrollbar Styles */}
