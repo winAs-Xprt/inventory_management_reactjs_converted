@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { 
-  DUMMY_VENDORS, 
+// src/pages/Vendor.jsx
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import {
+  DUMMY_VENDORS,
   DUMMY_STATISTICS_DATA,
-  calculateVendorStats, 
+  calculateVendorStats,
   getFilteredVendors,
   validateVendorData,
   generateVendorAvatar,
@@ -10,38 +11,6 @@ import {
   VENDOR_TYPE_OPTIONS,
   VENDOR_STATUS
 } from '../data/VendorData';
-
-// ==========================================================================
-// CUSTOM SCROLLBAR STYLES
-// ==========================================================================
-const ScrollbarStyles = () => (
-  <style jsx global>{`
-    * {
-      scrollbar-width: thin;
-      scrollbar-color: #0CC0BC #f1f5f9;
-    }
-    
-    *::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    
-    *::-webkit-scrollbar-track {
-      background: #f1f5f9;
-      border-radius: 10px;
-    }
-    
-    *::-webkit-scrollbar-thumb {
-      background: #0CC0BC;
-      border-radius: 10px;
-      border: 1px solid #f1f5f9;
-    }
-    
-    *::-webkit-scrollbar-thumb:hover {
-      background: #076A70;
-    }
-  `}</style>
-);
 
 // ==========================================================================
 // TOAST NOTIFICATION COMPONENT
@@ -64,7 +33,7 @@ const Toast = ({ show, message, type }) => {
   };
 
   return (
-    <div className={`fixed top-5 right-5 ${bgColorMap[type]} text-white px-5 py-3.5 rounded-md flex items-center gap-3 font-semibold text-sm z-50 shadow-2xl animate-in slide-in-from-right duration-300`}>
+    <div className={`fixed top-5 right-5 ${bgColorMap[type]} text-white px-5 py-3.5 rounded-md flex items-center gap-3 font-semibold text-sm z-[9999] shadow-2xl animate-in slide-in-from-right duration-300`}>
       <i className={`fas ${iconMap[type]} text-lg`}></i>
       <span>{message}</span>
     </div>
@@ -87,7 +56,7 @@ const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, type = 'war
   const config = iconMap[type];
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 animate-in fade-in duration-200">
+    <div className="fixed inset-0 flex items-center justify-center z-[9999] animate-in fade-in duration-200">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel}></div>
       <div className="relative w-[90%] max-w-md animate-in slide-in-from-bottom duration-300">
         <div className="bg-white rounded-xl shadow-2xl overflow-hidden">
@@ -110,9 +79,8 @@ const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, type = 'war
             </button>
             <button
               onClick={onConfirm}
-              className={`flex-1 px-5 py-3 text-white rounded-md text-sm font-semibold cursor-pointer hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 ${
-                isDanger ? 'bg-red-500 hover:bg-red-600' : 'bg-teal-500 hover:bg-teal-600'
-              }`}
+              className={`flex-1 px-5 py-3 text-white rounded-md text-sm font-semibold cursor-pointer hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 ${isDanger ? 'bg-red-500 hover:bg-red-600' : 'bg-teal-500 hover:bg-teal-600'
+                }`}
             >
               <i className="fas fa-check"></i>
               Confirm
@@ -121,110 +89,6 @@ const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, type = 'war
         </div>
       </div>
     </div>
-  );
-};
-
-// ==========================================================================
-// SIDEBAR COMPONENT
-// ==========================================================================
-const Sidebar = ({ sidebarOpen, setSidebarOpen, onLogout }) => {
-  return (
-    <aside
-      className={`fixed top-0 left-0 h-screen w-64 bg-white border-r border-gray-200 p-4 z-40 shadow-lg transition-transform duration-300 overflow-y-auto ${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-      }`}
-    >
-      <div className="flex items-center justify-center mb-5 pb-4 border-b-2 border-gray-200">
-        <a href="/dashboard" className="flex items-center gap-2.5 text-base font-extrabold text-gray-800 no-underline hover:scale-105 transition-transform duration-200">
-          <i className="fas fa-boxes text-2xl bg-gradient-to-br from-teal-400 to-teal-700 bg-clip-text text-transparent"></i>
-          <span className="bg-gradient-to-br from-teal-400 to-teal-700 bg-clip-text text-transparent">Inventory System</span>
-        </a>
-      </div>
-
-      <div className="mb-5 relative">
-        <div className="relative flex items-center">
-          <i className="fas fa-search absolute left-3 text-gray-400 text-sm"></i>
-          <input
-            type="text"
-            placeholder="Search anything..."
-            className="w-full py-2.5 px-9 border-2 border-gray-200 rounded-md text-sm text-gray-800 bg-white focus:outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all duration-200"
-          />
-        </div>
-      </div>
-
-      <nav>
-        <ul className="space-y-1.5 mb-20">
-          <li>
-            <a href="/dashboard" className="flex items-center gap-2.5 px-3.5 py-2.5 text-gray-600 no-underline rounded-md text-sm font-medium hover:bg-cyan-50 hover:text-teal-500 hover:translate-x-1 transition-all duration-200">
-              <i className="fas fa-chart-pie text-base w-5 text-center"></i>
-              <span>Dashboard</span>
-            </a>
-          </li>
-          <li>
-            <a href="/vendor" className="flex items-center gap-2.5 px-3.5 py-2.5 no-underline rounded-md text-sm font-medium bg-gradient-to-br from-teal-400 to-teal-700 text-white shadow-md">
-              <i className="fas fa-store text-base w-5 text-center"></i>
-              <span>Vendor</span>
-            </a>
-          </li>
-          <li>
-            <a href="/product" className="flex items-center gap-2.5 px-3.5 py-2.5 text-gray-600 no-underline rounded-md text-sm font-medium hover:bg-cyan-50 hover:text-teal-500 hover:translate-x-1 transition-all duration-200">
-              <i className="fas fa-box text-base w-5 text-center"></i>
-              <span>Products</span>
-            </a>
-          </li>
-          <li>
-            <a href="/purchase" className="flex items-center gap-2.5 px-3.5 py-2.5 text-gray-600 no-underline rounded-md text-sm font-medium hover:bg-cyan-50 hover:text-teal-500 hover:translate-x-1 transition-all duration-200">
-              <i className="fas fa-shopping-cart text-base w-5 text-center"></i>
-              <span>Purchase</span>
-            </a>
-          </li>
-          <li>
-            <a href="/inventory" className="flex items-center gap-2.5 px-3.5 py-2.5 text-gray-600 no-underline rounded-md text-sm font-medium hover:bg-cyan-50 hover:text-teal-500 hover:translate-x-1 transition-all duration-200">
-              <i className="fas fa-warehouse text-base w-5 text-center"></i>
-              <span>Inventory</span>
-            </a>
-          </li>
-          <li>
-            <a href="/scrap" className="flex items-center gap-2.5 px-3.5 py-2.5 text-gray-600 no-underline rounded-md text-sm font-medium hover:bg-cyan-50 hover:text-teal-500 hover:translate-x-1 transition-all duration-200">
-              <i className="fas fa-recycle text-base w-5 text-center"></i>
-              <span>Scrap Management</span>
-            </a>
-          </li>
-          <li>
-            <a href="/maintenance" className="flex items-center gap-2.5 px-3.5 py-2.5 text-gray-600 no-underline rounded-md text-sm font-medium hover:bg-cyan-50 hover:text-teal-500 hover:translate-x-1 transition-all duration-200">
-              <i className="fas fa-tools text-base w-5 text-center"></i>
-              <span>Maintenance</span>
-            </a>
-          </li>
-          <li>
-            <a href="/reports" className="flex items-center gap-2.5 px-3.5 py-2.5 text-gray-600 no-underline rounded-md text-sm font-medium hover:bg-cyan-50 hover:text-teal-500 hover:translate-x-1 transition-all duration-200">
-              <i className="fas fa-file-alt text-base w-5 text-center"></i>
-              <span>Reports</span>
-            </a>
-          </li>
-          <li>
-            <a href="/users" className="flex items-center gap-2.5 px-3.5 py-2.5 text-gray-600 no-underline rounded-md text-sm font-medium hover:bg-cyan-50 hover:text-teal-500 hover:translate-x-1 transition-all duration-200">
-              <i className="fas fa-users-cog text-base w-5 text-center"></i>
-              <span>User Management</span>
-            </a>
-          </li>
-          <li>
-            <a href="/settings" className="flex items-center gap-2.5 px-3.5 py-2.5 text-gray-600 no-underline rounded-md text-sm font-medium hover:bg-cyan-50 hover:text-teal-500 hover:translate-x-1 transition-all duration-200">
-              <i className="fas fa-cog text-base w-5 text-center"></i>
-              <span>Settings</span>
-            </a>
-          </li>
-        </ul>
-      </nav>
-
-      <button
-        onClick={onLogout}
-        className="absolute bottom-4 left-4 right-4 flex items-center justify-center gap-2 py-2.5 px-2.5 bg-gradient-to-br from-red-500 to-red-700 text-white border-none rounded-md text-sm font-semibold cursor-pointer hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200"
-      >
-        <i className="fas fa-sign-out-alt text-base"></i>
-        <span>Logout</span>
-      </button>
-    </aside>
   );
 };
 
@@ -377,7 +241,7 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 p-5">
+    <div className="fixed inset-0 flex items-center justify-center z-[9999] p-5">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
       <div className="relative w-full max-w-2xl max-h-[90vh] animate-in fade-in duration-300">
         <div className="bg-white rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
@@ -392,8 +256,10 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
               <i className="fas fa-times"></i>
             </button>
           </div>
+
           <div className="p-6 overflow-y-auto flex-1">
             <form onSubmit={handleSubmit}>
+              {/* Vendor Name & Company Name */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
@@ -436,6 +302,7 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
                 </div>
               </div>
 
+              {/* Vendor Type Selection */}
               <div className="flex flex-col gap-1.5 mb-4">
                 <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
                   <i className="fas fa-tags text-teal-500"></i>
@@ -500,6 +367,7 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
                 )}
               </div>
 
+              {/* Contact & Email */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
@@ -546,6 +414,7 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
                 </div>
               </div>
 
+              {/* Address */}
               <div className="flex flex-col gap-1.5 mb-4">
                 <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
                   <i className="fas fa-map-marker-alt text-teal-500"></i>
@@ -566,6 +435,7 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
                 </small>
               </div>
 
+              {/* Pincode, City, State */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
@@ -637,6 +507,7 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
                 </div>
               </div>
 
+              {/* GST & Status */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
@@ -677,6 +548,7 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
               </div>
             </form>
           </div>
+
           <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-2.5 bg-gray-50">
             <button
               onClick={onClose}
@@ -708,7 +580,7 @@ const ViewVendorModal = ({ isOpen, onClose, vendor }) => {
   const vendorTypes = Array.isArray(vendor.vendorType) ? vendor.vendorType : [vendor.vendorType];
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 p-5">
+    <div className="fixed inset-0 flex items-center justify-center z-[9999] p-5">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
       <div className="relative w-full max-w-4xl max-h-[90vh] animate-in fade-in duration-300">
         <div className="bg-white rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
@@ -754,9 +626,8 @@ const ViewVendorModal = ({ isOpen, onClose, vendor }) => {
                     <i className="fas fa-toggle-on text-teal-500"></i>
                     <strong>Status:</strong>
                   </div>
-                  <span className={`inline-block px-2.5 py-1 rounded text-xs font-bold uppercase tracking-wide ${
-                    vendor.status === VENDOR_STATUS.ACTIVE ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
-                  }`}>
+                  <span className={`inline-block px-2.5 py-1 rounded text-xs font-bold uppercase tracking-wide ${vendor.status === VENDOR_STATUS.ACTIVE ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
+                    }`}>
                     {vendor.status}
                   </span>
                 </div>
@@ -796,6 +667,24 @@ const ViewVendorModal = ({ isOpen, onClose, vendor }) => {
                   <p className="m-0 text-gray-700 font-mono">{vendor.gst}</p>
                 </div>
               )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 bg-gray-50 rounded-md">
+                  <div className="flex items-center gap-2 mb-2">
+                    <i className="fas fa-shopping-cart text-teal-500"></i>
+                    <strong>Total Orders:</strong>
+                  </div>
+                  <p className="m-0 text-gray-700 text-2xl font-bold">{vendor.totalOrders}</p>
+                </div>
+
+                <div className="p-4 bg-gray-50 rounded-md">
+                  <div className="flex items-center gap-2 mb-2">
+                    <i className="fas fa-calendar text-teal-500"></i>
+                    <strong>Last Order Date:</strong>
+                  </div>
+                  <p className="m-0 text-gray-700">{new Date(vendor.lastOrderDate).toLocaleDateString('en-IN')}</p>
+                </div>
+              </div>
             </div>
           </div>
           <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-2.5 bg-gray-50">
@@ -816,41 +705,39 @@ const ViewVendorModal = ({ isOpen, onClose, vendor }) => {
 // ==========================================================================
 // MAIN VENDOR MANAGEMENT COMPONENT
 // ==========================================================================
-const VendorManagement = () => {
-  const [vendorData, setVendorData] = useState([...DUMMY_VENDORS]);
-  const [currentVendor, setCurrentVendor] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [vendorModalOpen, setVendorModalOpen] = useState(false);
-  const [viewModalOpen, setViewModalOpen] = useState(false);
-  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
-  const [selectedVendor, setSelectedVendor] = useState(null);
+const Vendor = () => {
+  const [vendors, setVendors] = useState([]);
   const [searchValue, setSearchValue] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterType, setFilterType] = useState('');
+  const [selectedVendors, setSelectedVendors] = useState([]);
+
+  const [showModal, setShowModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+
+  const [editingVendor, setEditingVendor] = useState(null);
+  const [viewingVendor, setViewingVendor] = useState(null);
+  const [deletingVendorId, setDeletingVendorId] = useState(null);
+
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
-  const [confirmConfig, setConfirmConfig] = useState({
-    title: '',
-    message: '',
-    onConfirm: null,
-    type: 'warning',
-    isDanger: false
-  });
 
-  // Calculate statistics using memoization for performance
-  // Using DUMMY_STATISTICS_DATA to simulate API response
-  // In production, this would be: const stats = useMemo(() => calculateVendorStats(vendorData, apiStatsData), [vendorData, apiStatsData]);
-  const stats = useMemo(() => calculateVendorStats(vendorData, DUMMY_STATISTICS_DATA), [vendorData]);
-
-  // Get filtered vendors using memoization
-  const filteredVendors = useMemo(() => 
-    getFilteredVendors(vendorData, { searchValue, filterStatus, filterType }),
-    [vendorData, searchValue, filterStatus, filterType]
-  );
-
+  // Initialize vendors from dummy data
   useEffect(() => {
-    showToast('Vendor Management loaded successfully!', 'success');
+    setVendors(DUMMY_VENDORS);
   }, []);
 
+  // Calculate statistics
+  const stats = useMemo(() => {
+    return calculateVendorStats(vendors, DUMMY_STATISTICS_DATA);
+  }, [vendors]);
+
+  // Filter vendors
+  const filteredVendors = useMemo(() => {
+    return getFilteredVendors(vendors, { searchValue, filterStatus, filterType });
+  }, [vendors, searchValue, filterStatus, filterType]);
+
+  // Toast notification handler
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
     setTimeout(() => {
@@ -858,465 +745,481 @@ const VendorManagement = () => {
     }, 3000);
   };
 
-  const openAddVendorModal = () => {
-    setCurrentVendor(null);
-    setVendorModalOpen(true);
-  };
+  // Handle Refresh
+const handleRefresh = () => {
+  // Show loading state with spinning icon
+  const refreshButton = document.querySelector('[title="Refresh vendor list"] i');
+  if (refreshButton) {
+    refreshButton.classList.add('fa-spin');
+  }
 
-  const closeVendorModal = () => {
-    setVendorModalOpen(false);
-    setCurrentVendor(null);
-  };
+  // Show refreshing toast
+  showToast('Refreshing vendor data...', 'info');
 
-  const editVendor = (id) => {
-    const vendor = vendorData.find(v => v.id === id);
-    if (!vendor) {
-      showToast('Vendor not found!', 'error');
-      return;
+  // Simulate data refresh (in real app, this would be an API call)
+  setTimeout(() => {
+    // Reset vendors to original dummy data
+    setVendors(DUMMY_VENDORS);
+    
+    // Clear all filters
+    setSearchValue('');
+    setFilterStatus('');
+    setFilterType('');
+    setSelectedVendors([]);
+    
+    // Stop spinning
+    if (refreshButton) {
+      refreshButton.classList.remove('fa-spin');
     }
-    setCurrentVendor(vendor);
-    setVendorModalOpen(true);
+    
+    // Show success message AFTER refresh completes
+    setTimeout(() => {
+      showToast('Vendor list refreshed successfully', 'success');
+    }, 100);
+  }, 800);
+};
+
+  // Handle Add Vendor
+  const handleAddVendor = () => {
+    setEditingVendor(null);
+    setShowModal(true);
   };
 
-  const saveVendor = (formData) => {
-    const { vendorName, companyName, contact, email, address, pincode, city, state, gst, status, vendorTypes } = formData;
+  // Handle Edit Vendor
+  const handleEditVendor = (vendor) => {
+    setEditingVendor(vendor);
+    setShowModal(true);
+  };
 
-    // Validate using the utility function
-    const validation = validateVendorData({
-      vendorName,
-      companyName,
-      contact,
-      email,
-      address,
-      pincode,
-      city,
-      state,
-      gst,
-      vendorTypes
-    });
+  // Handle View Vendor
+  const handleViewVendor = (vendor) => {
+    setViewingVendor(vendor);
+    setShowViewModal(true);
+  };
 
-    if (!validation.isValid) {
-      showToast(validation.errors[0], 'error');
-      return;
+  // Handle Delete Vendor (Single)
+  const handleDeleteVendor = (id) => {
+    setDeletingVendorId(id);
+    setShowConfirmModal(true);
+  };
+
+  // Confirm Delete
+  const confirmDelete = () => {
+    if (deletingVendorId) {
+      setVendors(vendors.filter(v => v.id !== deletingVendorId));
+      showToast('Vendor deleted successfully', 'success');
+      setDeletingVendorId(null);
+    } else if (selectedVendors.length > 0) {
+      setVendors(vendors.filter(v => !selectedVendors.includes(v.id)));
+      showToast(`${selectedVendors.length} vendors deleted successfully`, 'success');
+      setSelectedVendors([]);
     }
+    setShowConfirmModal(false);
+  };
 
-    const formattedContact = `+91 ${contact}`;
+  // Handle Bulk Delete
+  const handleBulkDelete = () => {
+    setDeletingVendorId(null);
+    setShowConfirmModal(true);
+  };
 
-    if (currentVendor) {
-      // Update existing vendor
-      const updatedVendors = vendorData.map(v =>
-        v.id === currentVendor.id
-          ? {
-            ...v,
-            vendorName,
-            companyName,
-            vendorType: vendorTypes,
-            contact: formattedContact,
-            email,
-            address,
-            pincode,
-            city,
-            state,
-            gst,
-            status
-          }
-          : v
-      );
-      setVendorData(updatedVendors);
-      showToast('Vendor updated successfully!', 'success');
-    } else {
-      // Add new vendor
-      const newId = Math.max(...vendorData.map(v => v.id)) + 1;
-      const avatarData = generateVendorAvatar(companyName);
-
-      const newVendor = {
-        id: newId,
-        vendorName,
-        companyName,
-        vendorType: vendorTypes,
-        contact: formattedContact,
-        email,
-        address,
-        pincode,
-        city,
-        state,
-        gst,
-        status,
-        lastOrderDate: new Date().toISOString().split('T')[0],
-        totalOrders: 0,
-        ...avatarData
+  // Handle Save Vendor (Add/Edit)
+  const handleSaveVendor = (formData) => {
+    if (editingVendor) {
+      // Edit existing vendor
+      const updatedVendor = {
+        ...editingVendor,
+        vendorName: formData.vendorName,
+        companyName: formData.companyName,
+        contact: `+91 ${formData.contact}`,
+        email: formData.email,
+        address: formData.address,
+        pincode: formData.pincode,
+        city: formData.city,
+        state: formData.state,
+        gst: formData.gst,
+        status: formData.status,
+        vendorType: formData.vendorTypes
       };
 
-      setVendorData([...vendorData, newVendor]);
-      showToast('Vendor added successfully!', 'success');
+      setVendors(vendors.map(v => v.id === editingVendor.id ? updatedVendor : v));
+      showToast('Vendor updated successfully', 'success');
+    } else {
+      // Add new vendor
+      const avatarData = generateVendorAvatar(formData.companyName);
+      const newVendor = {
+        id: Date.now(),
+        vendorName: formData.vendorName,
+        companyName: formData.companyName,
+        contact: `+91 ${formData.contact}`,
+        email: formData.email,
+        address: formData.address,
+        pincode: formData.pincode,
+        city: formData.city,
+        state: formData.state,
+        gst: formData.gst,
+        status: formData.status,
+        vendorType: formData.vendorTypes,
+        lastOrderDate: new Date().toISOString().split('T')[0],
+        totalOrders: 0,
+        avatar: avatarData.avatar,
+        avatarColor: avatarData.avatarColor
+      };
+
+      setVendors([...vendors, newVendor]);
+      showToast('Vendor added successfully', 'success');
     }
 
-    closeVendorModal();
+    setShowModal(false);
+    setEditingVendor(null);
   };
 
-  const deleteVendor = (id) => {
-    const vendor = vendorData.find(v => v.id === id);
-    if (!vendor) return;
-
-    setConfirmConfig({
-      title: 'Delete Vendor',
-      message: `Are you sure you want to delete "${vendor.companyName || vendor.vendorName}"? This action cannot be undone.`,
-      onConfirm: () => {
-        setVendorData(vendorData.filter(v => v.id !== id));
-        showToast('Vendor deleted successfully!', 'success');
-        setConfirmModalOpen(false);
-      },
-      type: 'error',
-      isDanger: true
-    });
-    setConfirmModalOpen(true);
-  };
-
-  const viewVendor = (id) => {
-    const vendor = vendorData.find(v => v.id === id);
-    if (!vendor) {
-      showToast('Vendor not found!', 'error');
-      return;
+  // Handle Select All
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedVendors(filteredVendors.map(v => v.id));
+    } else {
+      setSelectedVendors([]);
     }
-    setSelectedVendor(vendor);
-    setViewModalOpen(true);
   };
 
+  // Handle Select Single
+  const handleSelectVendor = (id) => {
+    setSelectedVendors(prev =>
+      prev.includes(id) ? prev.filter(vid => vid !== id) : [...prev, id]
+    );
+  };
+
+  // Clear Filters
   const clearFilters = () => {
     setSearchValue('');
     setFilterStatus('');
     setFilterType('');
-    showToast('Filters cleared', 'info');
   };
-
-  const refreshData = () => {
-    showToast('Data refreshed successfully!', 'info');
-    // In a real app, this would fetch fresh data from the server
-  };
-
-  const logout = () => {
-    setConfirmConfig({
-      title: 'Logout Confirmation',
-      message: 'Are you sure you want to logout?',
-      onConfirm: () => {
-        showToast('Logging out...', 'info');
-        setTimeout(() => {
-          window.location.href = '/';
-        }, 1000);
-        setConfirmModalOpen(false);
-      },
-      type: 'warning',
-      isDanger: false
-    });
-    setConfirmModalOpen(true);
-  };
-
-  const displayData = searchValue || filterStatus || filterType ? filteredVendors : vendorData;
 
   return (
-    <>
-      <ScrollbarStyles />
-
-      <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-gray-50 to-cyan-50 font-sans">
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="lg:hidden fixed top-3 left-3 z-50 bg-gradient-to-br from-teal-400 to-teal-700 text-white w-10 h-10 rounded-lg flex items-center justify-center shadow-md hover:scale-110 transition-transform duration-200"
-        >
-          <i className="fas fa-bars text-lg"></i>
-        </button>
-
-        <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onLogout={logout} />
-
-        <div className="ml-0 lg:ml-64 min-h-screen">
-          <main className="p-5">
-            <header className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
-              <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-5">
-                <div className="flex-1">
-                  <h1 className="text-2xl font-extrabold bg-gradient-to-br from-teal-400 to-teal-700 bg-clip-text text-transparent mb-1 flex items-center gap-2.5">
-                    <i className="fas fa-store bg-gradient-to-br from-teal-400 to-teal-700 bg-clip-text text-transparent"></i>
-                    Vendor Management
-                  </h1>
-                  <p className="text-gray-500 text-sm font-medium">
-                    Manage vendors, track deliveries, and monitor vendor performance
-                  </p>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-2.5 items-center w-full lg:w-auto">
-                  <button
-                    onClick={openAddVendorModal}
-                    className="flex-1 lg:flex-initial flex items-center justify-center gap-1.5 px-4 py-2.5 bg-gradient-to-br from-teal-400 to-teal-700 text-white border-none rounded-md text-sm font-semibold cursor-pointer shadow-sm hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200"
-                  >
-                    <i className="fas fa-plus text-sm"></i>
-                    Add Vendor
-                  </button>
-                  <button
-                    onClick={refreshData}
-                    className="flex-1 lg:flex-initial flex items-center justify-center gap-1.5 px-4 py-2.5 bg-gray-50 text-gray-700 border border-gray-200 rounded-md text-sm font-semibold cursor-pointer hover:bg-white hover:border-teal-400 hover:text-teal-500 transition-all duration-200"
-                  >
-                    <i className="fas fa-sync-alt text-sm"></i>
-                    Refresh
-                  </button>
-                </div>
-              </div>
-            </header>
-
-            {/* Statistics Cards - Now dynamically calculated from VendorData */}
-            <section className="mb-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <StatCard
-                  icon="fa-store"
-                  title="Total Vendors"
-                  value={stats.total}
-                  change={`${stats.monthlyChange} This Month`}
-                  changeType={stats.monthlyChangeType}
-                />
-                <StatCard
-                  icon="fa-check-circle"
-                  title="Active Vendors"
-                  value={stats.active}
-                  change={`${stats.activeRate}% Active Rate`}
-                  changeType="positive"
-                />
-                <StatCard
-                  icon="fa-times-circle"
-                  title="Inactive Vendors"
-                  value={stats.inactive}
-                  change={`${stats.inactiveRate}% Inactive Rate`}
-                  changeType="negative"
-                />
-              </div>
-            </section>
-
-            <section className="mb-6">
-              <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                <div className="px-5 py-4 border-b border-gray-200 flex justify-between items-center">
-                  <div className="flex items-center gap-2 text-base font-bold text-gray-800">
-                    <i className="fas fa-filter text-lg text-teal-500"></i>
-                    Filters
-                  </div>
-                </div>
-                <div className="p-5">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-semibold text-gray-600 mb-0.5">Search Vendor</label>
-                      <input
-                        type="text"
-                        value={searchValue}
-                        onChange={(e) => setSearchValue(e.target.value)}
-                        placeholder="Search by name, contact, email..."
-                        className="py-2.5 px-3 border-2 border-gray-200 rounded-md text-gray-800 text-sm outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all duration-200 w-full bg-white"
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-semibold text-gray-600 mb-0.5">Status</label>
-                      <select
-                        value={filterStatus}
-                        onChange={(e) => setFilterStatus(e.target.value)}
-                        className="py-2.5 px-3 border-2 border-gray-200 rounded-md text-gray-800 text-sm outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all duration-200 w-full bg-white cursor-pointer"
-                      >
-                        <option value="">All Status</option>
-                        <option value={VENDOR_STATUS.ACTIVE}>Active</option>
-                        <option value={VENDOR_STATUS.INACTIVE}>Inactive</option>
-                      </select>
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-semibold text-gray-600 mb-0.5">Type of Vendor</label>
-                      <select
-                        value={filterType}
-                        onChange={(e) => setFilterType(e.target.value)}
-                        className="py-2.5 px-3 border-2 border-gray-200 rounded-md text-gray-800 text-sm outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all duration-200 w-full bg-white cursor-pointer"
-                      >
-                        <option value="">All Types</option>
-                        {VENDOR_TYPE_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                      <button
-                        onClick={() => showToast('Filters applied', 'info')}
-                        className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-gradient-to-br from-teal-400 to-teal-700 text-white border-none rounded-md text-sm font-semibold cursor-pointer shadow-sm hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 w-full"
-                      >
-                        <i className="fas fa-filter text-sm"></i>
-                        Apply Filters
-                      </button>
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                      <button
-                        onClick={clearFilters}
-                        className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-gradient-to-br from-red-500 to-red-700 text-white border-none rounded-md text-sm font-semibold cursor-pointer shadow-sm hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 w-full"
-                      >
-                        <i className="fas fa-times text-sm"></i>
-                        Clear All
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section className="mb-6">
-              <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                <div className="px-5 py-4 border-b border-gray-200 flex justify-between items-center">
-                  <div className="flex items-center gap-2 text-base font-bold text-gray-800">
-                    <i className="fas fa-building text-lg text-teal-500"></i>
-                    Vendor Directory
-                  </div>
-                </div>
-                <div className="p-5">
-                  <div className="overflow-x-auto">
-                    <table className="w-full border-collapse bg-white">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="py-3 px-4 text-left font-bold text-gray-600 text-xs uppercase tracking-wide border-b-2 border-gray-200 whitespace-nowrap">ID</th>
-                          <th className="py-3 px-4 text-left font-bold text-gray-600 text-xs uppercase tracking-wide border-b-2 border-gray-200 whitespace-nowrap">Vendor Details</th>
-                          <th className="py-3 px-4 text-left font-bold text-gray-600 text-xs uppercase tracking-wide border-b-2 border-gray-200 whitespace-nowrap">Contact Info</th>
-                          <th className="py-3 px-4 text-left font-bold text-gray-600 text-xs uppercase tracking-wide border-b-2 border-gray-200 whitespace-nowrap">Location & GST</th>
-                          <th className="py-3 px-4 text-left font-bold text-gray-600 text-xs uppercase tracking-wide border-b-2 border-gray-200 whitespace-nowrap">Type of Vendor</th>
-                          <th className="py-3 px-4 text-left font-bold text-gray-600 text-xs uppercase tracking-wide border-b-2 border-gray-200 whitespace-nowrap">Status</th>
-                          <th className="py-3 px-4 text-left font-bold text-gray-600 text-xs uppercase tracking-wide border-b-2 border-gray-200 whitespace-nowrap">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {displayData.length === 0 ? (
-                          <tr>
-                            <td colSpan="7" className="text-center py-10">
-                              <i className="fas fa-inbox text-5xl text-gray-400 mb-4 block"></i>
-                              <p className="text-gray-500 text-sm">No vendors found</p>
-                            </td>
-                          </tr>
-                        ) : (
-                          displayData.map((vendor) => {
-                            const vendorTypes = Array.isArray(vendor.vendorType) ? vendor.vendorType : [vendor.vendorType];
-                            return (
-                              <tr key={vendor.id} className="hover:bg-cyan-50 transition-colors duration-200">
-                                <td className="py-3 px-4 border-b border-gray-200 text-gray-800 text-sm">
-                                  <strong>#{vendor.id}</strong>
-                                </td>
-                                <td className="py-3 px-4 border-b border-gray-200 text-gray-800 text-sm">
-                                  <div className="flex items-center gap-3">
-                                    <div
-                                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm"
-                                      style={{ backgroundColor: vendor.avatarColor }}
-                                    >
-                                      {vendor.avatar}
-                                    </div>
-                                    <div>
-                                      <div className="font-semibold text-gray-800">{vendor.companyName || vendor.vendorName}</div>
-                                      <div className="text-xs text-gray-500">{vendor.vendorName}</div>
-                                    </div>
-                                  </div>
-                                </td>
-                                <td className="py-3 px-4 border-b border-gray-200 text-gray-800 text-sm">
-                                  <div className="flex flex-col gap-1">
-                                    <div className="flex items-center gap-1.5">
-                                      <i className="fas fa-phone text-teal-500 text-xs"></i>
-                                      <span className="text-sm">{vendor.contact}</span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5">
-                                      <i className="fas fa-envelope text-teal-500 text-xs"></i>
-                                      <span className="text-sm">{vendor.email}</span>
-                                    </div>
-                                  </div>
-                                </td>
-                                <td className="py-3 px-4 border-b border-gray-200 text-gray-800 text-sm">
-                                  <div className="flex flex-col gap-1">
-                                    <div className="flex items-center gap-1.5">
-                                      <i className="fas fa-map-marker-alt text-teal-500 text-xs"></i>
-                                      <span className="text-sm">{vendor.city}, {vendor.state}</span>
-                                    </div>
-                                    {vendor.gst && (
-                                      <div className="flex items-center gap-1.5">
-                                        <i className="fas fa-file-invoice text-teal-500 text-xs"></i>
-                                        <span className="text-xs text-gray-500 font-mono">{vendor.gst}</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                </td>
-                                <td className="py-3 px-4 border-b border-gray-200 text-gray-800 text-sm">
-                                  <div className="flex flex-wrap gap-2">
-                                    {vendorTypes.map((type, idx) => (
-                                      <VendorTypeBadge key={idx} type={type} />
-                                    ))}
-                                  </div>
-                                </td>
-                                <td className="py-3 px-4 border-b border-gray-200 text-gray-800 text-sm">
-                                  <span className={`inline-block px-2.5 py-1 rounded text-xs font-bold uppercase tracking-wide ${
-                                    vendor.status === VENDOR_STATUS.ACTIVE ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
-                                  }`}>
-                                    {vendor.status}
-                                  </span>
-                                </td>
-                                <td className="py-3 px-4 border-b border-gray-200 text-gray-800 text-sm">
-                                  <div className="flex gap-2">
-                                    <button
-                                      onClick={() => viewVendor(vendor.id)}
-                                      className="px-3 py-1.5 bg-blue-500 text-white border-none rounded-md cursor-pointer text-xs font-semibold inline-flex items-center gap-1 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200"
-                                      title="View Details"
-                                    >
-                                      <i className="fas fa-eye text-xs"></i>
-                                    </button>
-                                    <button
-                                      onClick={() => editVendor(vendor.id)}
-                                      className="px-3 py-1.5 bg-yellow-500 text-white border-none rounded-md cursor-pointer text-xs font-semibold inline-flex items-center gap-1 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200"
-                                      title="Edit Vendor"
-                                    >
-                                      <i className="fas fa-edit text-xs"></i>
-                                    </button>
-                                    <button
-                                      onClick={() => deleteVendor(vendor.id)}
-                                      className="px-3 py-1.5 bg-red-500 text-white border-none rounded-md cursor-pointer text-xs font-semibold inline-flex items-center gap-1 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200"
-                                      title="Delete Vendor"
-                                    >
-                                      <i className="fas fa-trash text-xs"></i>
-                                    </button>
-                                  </div>
-                                </td>
-                              </tr>
-                            );
-                          })
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </section>
-          </main>
+    <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-gray-50 to-cyan-50 p-5">
+      {/* Header */}
+      {/* Header */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6 flex justify-between items-center flex-wrap gap-4">
+        <div className="flex-1">
+          <h1 className="text-2xl font-extrabold bg-gradient-to-br from-teal-400 to-teal-700 bg-clip-text text-transparent mb-1 flex items-center gap-2.5">
+            <i className="fas fa-store bg-gradient-to-br from-teal-400 to-teal-700 bg-clip-text"></i>
+            Vendor Management
+          </h1>
+          <p className="text-gray-600 text-sm font-medium">Manage your suppliers and vendor relationships</p>
         </div>
+        <div className="flex gap-2.5 items-center flex-wrap">
+          <button
+            onClick={handleAddVendor}
+            className="px-4 py-2.5 bg-gradient-to-br from-teal-400 to-teal-700 text-white border-none rounded-md text-sm font-semibold cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg flex items-center gap-2"
+          >
+            <i className="fas fa-plus"></i>
+            Add Vendor
+          </button>
+          <button
+            onClick={handleRefresh}
+            className="px-4 py-2.5 bg-gradient-to-br from-blue-400 to-blue-600 text-white border-none rounded-md text-sm font-semibold cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg flex items-center gap-2"
+            title="Refresh vendor list"
+          >
+            <i className="fas fa-sync-alt"></i>
+            Refresh
+          </button>
 
-        <VendorModal
-          isOpen={vendorModalOpen}
-          onClose={closeVendorModal}
-          vendor={currentVendor}
-          onSave={saveVendor}
-        />
-
-        <ViewVendorModal
-          isOpen={viewModalOpen}
-          onClose={() => setViewModalOpen(false)}
-          vendor={selectedVendor}
-        />
-
-        <ConfirmModal
-          isOpen={confirmModalOpen}
-          title={confirmConfig.title}
-          message={confirmConfig.message}
-          onConfirm={confirmConfig.onConfirm}
-          onCancel={() => setConfirmModalOpen(false)}
-          type={confirmConfig.type}
-          isDanger={confirmConfig.isDanger}
-        />
-
-        <Toast show={toast.show} message={toast.message} type={toast.type} />
+        </div>
       </div>
-    </>
+
+
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <StatCard
+          icon="fa-users"
+          title="Total Vendors"
+          value={stats.total}
+          change={`${stats.monthlyChange} This Month`}
+          changeType={stats.monthlyChangeType}
+        />
+        <StatCard
+          icon="fa-check-circle"
+          title="Active Vendors"
+          value={stats.active}
+          change={`${stats.activeRate}% Active Rate`}
+          changeType="positive"
+        />
+        <StatCard
+          icon="fa-ban"
+          title="Inactive Vendors"
+          value={stats.inactive}
+          change={`${stats.inactiveRate}% Inactive Rate`}
+          changeType="negative"
+        />
+        <StatCard
+          icon="fa-shopping-cart"
+          title="Total Orders"
+          value={stats.totalOrders}
+          change="All Vendors"
+          changeType="positive"
+        />
+      </div>
+
+      {/* Filters */}
+      <div className="mb-6">
+        <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          <div className="p-4 border-b-2 border-gray-200 bg-gray-50 flex justify-between items-center flex-wrap gap-3">
+            <div className="text-lg font-bold text-gray-800 flex items-center gap-2">
+              <i className="fas fa-filter text-teal-500 text-xl"></i>
+              Filters
+            </div>
+            <button
+              onClick={clearFilters}
+              className="px-4 py-2 bg-gradient-to-br from-red-500 to-red-700 text-white border-none rounded-md text-sm font-semibold cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg flex items-center gap-2"
+            >
+              <i className="fas fa-times"></i>
+              Clear
+            </button>
+          </div>
+          <div className="p-5">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="relative">
+                <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input
+                  type="text"
+                  placeholder="Search vendors..."
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-200 rounded-md text-sm text-gray-800 outline-none transition-all focus:border-teal-400 focus:ring-4 focus:ring-cyan-100"
+                />
+              </div>
+              <div>
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="w-full p-2.5 border-2 border-gray-200 rounded-md text-sm text-gray-800 outline-none transition-all cursor-pointer focus:border-teal-400 focus:ring-4 focus:ring-cyan-100"
+                >
+                  <option value="">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+              <div>
+                <select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  className="w-full p-2.5 border-2 border-gray-200 rounded-md text-sm text-gray-800 outline-none transition-all cursor-pointer focus:border-teal-400 focus:ring-4 focus:ring-cyan-100"
+                >
+                  <option value="">All Types</option>
+                  <option value={VENDOR_TYPES.PURCHASE}>Purchase Vendor</option>
+                  <option value={VENDOR_TYPES.MAINTENANCE}>Maintenance Partner</option>
+                  <option value={VENDOR_TYPES.SCRAP}>Scrap Disposal Partner</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    {/* Vendor Table */}
+<div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm mb-6">
+  <div className="bg-gray-50 p-4 border-b-2 border-gray-200 flex justify-between items-center flex-wrap gap-4">
+    <div className="flex items-center gap-2.5 text-lg font-bold text-gray-800">
+      <i className="fas fa-list text-teal-500 text-xl"></i>
+      Vendor Directory ({filteredVendors.length})
+    </div>
+    <div className="flex gap-2 flex-wrap">
+      <button className="px-4 py-2 bg-gray-50 text-gray-700 border border-gray-200 rounded-md text-sm font-semibold cursor-pointer transition-all hover:bg-white hover:border-teal-400 hover:text-teal-500 flex items-center gap-2">
+        <i className="fas fa-download"></i>
+        Export
+      </button>
+    </div>
+  </div>
+
+  {selectedVendors.length > 0 && (
+    <div className="bg-cyan-50 p-4 border-b-2 border-gray-200 flex justify-between items-center gap-4 flex-wrap">
+      <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+        <i className="fas fa-check-square text-teal-500 text-base"></i>
+        <span className="text-teal-600 font-bold text-base">{selectedVendors.length}</span> vendors selected
+      </div>
+      <div className="flex gap-2 items-center flex-wrap">
+        <button
+          onClick={handleBulkDelete}
+          className="px-4 py-2 bg-gradient-to-br from-red-500 to-red-700 text-white border-none rounded-md text-sm font-semibold cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg flex items-center gap-2"
+        >
+          <i className="fas fa-trash"></i>
+          Delete Selected
+        </button>
+      </div>
+    </div>
+  )}
+
+  <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+    <table className="w-full border-collapse min-w-[1400px]">
+      <thead className="sticky top-0 z-10 bg-gray-50">
+        <tr>
+          <th className="p-3 text-left border-b border-gray-200 font-bold text-gray-600 text-xs uppercase tracking-wider bg-gray-50 w-12">
+            <input
+              type="checkbox"
+              onChange={handleSelectAll}
+              checked={selectedVendors.length === filteredVendors.length && filteredVendors.length > 0}
+              className="w-4 h-4 cursor-pointer accent-teal-500"
+            />
+          </th>
+          <th className="p-3 text-left border-b border-gray-200 font-bold text-gray-600 text-xs uppercase tracking-wider bg-gray-50 w-16">ID</th>
+          <th className="p-3 text-left border-b border-gray-200 font-bold text-gray-600 text-xs uppercase tracking-wider bg-gray-50">Vendor Details</th>
+          <th className="p-3 text-left border-b border-gray-200 font-bold text-gray-600 text-xs uppercase tracking-wider bg-gray-50">Contact Info</th>
+          <th className="p-3 text-left border-b border-gray-200 font-bold text-gray-600 text-xs uppercase tracking-wider bg-gray-50">Location & GST</th>
+          <th className="p-3 text-left border-b border-gray-200 font-bold text-gray-600 text-xs uppercase tracking-wider bg-gray-50">Type of Vendor</th>
+          <th className="p-3 text-left border-b border-gray-200 font-bold text-gray-600 text-xs uppercase tracking-wider bg-gray-50 w-24">Status</th>
+          <th className="p-3 text-left border-b border-gray-200 font-bold text-gray-600 text-xs uppercase tracking-wider bg-gray-50 w-32">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {filteredVendors.length > 0 ? (
+          filteredVendors.map((vendor) => {
+            const vendorTypes = Array.isArray(vendor.vendorType) ? vendor.vendorType : [vendor.vendorType];
+            return (
+              <tr key={vendor.id} className="transition-all hover:bg-cyan-50">
+                <td className="p-3 border-b border-gray-200 text-gray-800 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={selectedVendors.includes(vendor.id)}
+                    onChange={() => handleSelectVendor(vendor.id)}
+                    className="w-4 h-4 cursor-pointer accent-teal-500"
+                  />
+                </td>
+                <td className="p-3 border-b border-gray-200 text-gray-800 text-sm">
+                  <div className="font-bold text-gray-700">#{vendor.id}</div>
+                </td>
+                <td className="p-3 border-b border-gray-200 text-gray-800 text-sm">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+                      style={{ backgroundColor: vendor.avatarColor }}
+                    >
+                      {vendor.avatar}
+                    </div>
+                    <div>
+                      <div className="font-bold text-gray-800">{vendor.companyName}</div>
+                      <div className="text-xs text-gray-500">ID: {vendor.id}</div>
+                    </div>
+                  </div>
+                </td>
+                <td className="p-3 border-b border-gray-200 text-gray-800 text-sm">
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-1.5 text-gray-700">
+                      <i className="fas fa-phone text-teal-500 text-xs w-3"></i>
+                      <span className="text-xs">{vendor.contact}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-gray-700">
+                      <i className="fas fa-envelope text-teal-500 text-xs w-3"></i>
+                      <span className="text-xs">{vendor.email}</span>
+                    </div>
+                  </div>
+                </td>
+                <td className="p-3 border-b border-gray-200 text-gray-800 text-sm">
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-1.5 text-gray-700">
+                      <i className="fas fa-map-marker-alt text-teal-500 text-xs w-3"></i>
+                      <span className="text-xs">{vendor.city}, {vendor.state}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-gray-700">
+                      <i className="fas fa-file-invoice text-teal-500 text-xs w-3"></i>
+                      <span className="text-xs font-mono">{vendor.gst || 'N/A'}</span>
+                    </div>
+                  </div>
+                </td>
+                <td className="p-3 border-b border-gray-200 text-gray-800 text-sm">
+                  <div className="flex flex-col gap-1.5">
+                    {vendorTypes.map((type, idx) => (
+                      <VendorTypeBadge key={idx} type={type} />
+                    ))}
+                  </div>
+                </td>
+                <td className="p-3 border-b border-gray-200 text-gray-800 text-sm">
+                  <span className={`py-1.5 px-3 rounded text-xs font-bold uppercase tracking-wider inline-block ${
+                    vendor.status === VENDOR_STATUS.ACTIVE ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
+                  }`}>
+                    {vendor.status}
+                  </span>
+                </td>
+                <td className="p-2.5 border-b border-gray-200 text-gray-800 text-sm text-left whitespace-nowrap">
+                  <div className="flex gap-1.5">
+                    <button
+                      onClick={() => handleViewVendor(vendor)}
+                      className="w-8 h-8 border-none rounded-md cursor-pointer text-xs font-semibold transition-all inline-flex items-center justify-center bg-blue-500 text-white shadow-sm hover:-translate-y-px hover:shadow-md"
+                      title="View Details"
+                    >
+                      <i className="fas fa-eye text-xs"></i>
+                    </button>
+                    <button
+                      onClick={() => handleEditVendor(vendor)}
+                      className="w-8 h-8 border-none rounded-md cursor-pointer text-xs font-semibold transition-all inline-flex items-center justify-center bg-amber-500 text-white shadow-sm hover:-translate-y-px hover:shadow-md"
+                      title="Edit Vendor"
+                    >
+                      <i className="fas fa-edit text-xs"></i>
+                    </button>
+                    <button
+                      onClick={() => handleDeleteVendor(vendor.id)}
+                      className="w-8 h-8 border-none rounded-md cursor-pointer text-xs font-semibold transition-all inline-flex items-center justify-center bg-red-500 text-white shadow-sm hover:-translate-y-px hover:shadow-md"
+                      title="Delete Vendor"
+                    >
+                      <i className="fas fa-trash text-xs"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            );
+          })
+        ) : (
+          <tr>
+            <td colSpan="8" className="text-center p-10 text-gray-500">
+              <i className="fas fa-inbox text-4xl text-teal-500 mb-3 block"></i>
+              No vendors found
+            </td>
+          </tr>
+        )}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+      {/* Modals */}
+      <VendorModal
+        isOpen={showModal}
+        onClose={() => {
+          setShowModal(false);
+          setEditingVendor(null);
+        }}
+        vendor={editingVendor}
+        onSave={handleSaveVendor}
+      />
+
+      <ViewVendorModal
+        isOpen={showViewModal}
+        onClose={() => {
+          setShowViewModal(false);
+          setViewingVendor(null);
+        }}
+        vendor={viewingVendor}
+      />
+
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        title={deletingVendorId ? 'Delete Vendor' : `Delete ${selectedVendors.length} Vendors`}
+        message={deletingVendorId ? 'Are you sure you want to delete this vendor? This action cannot be undone.' : `Are you sure you want to delete ${selectedVendors.length} vendors? This action cannot be undone.`}
+        onConfirm={confirmDelete}
+        onCancel={() => {
+          setShowConfirmModal(false);
+          setDeletingVendorId(null);
+        }}
+        type="warning"
+        isDanger={true}
+      />
+
+      {/* Toast Notification */}
+      <Toast show={toast.show} message={toast.message} type={toast.type} />
+    </div>
   );
 };
 
-export default VendorManagement;
+export default Vendor;

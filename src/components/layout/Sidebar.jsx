@@ -1,86 +1,118 @@
-import React, { useState } from 'react';
+// src/components/Sidebar.jsx
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 
-const Sidebar = ({ isOpen, onClose }) => {
-  const [activeMenu, setActiveMenu] = useState('dashboard');
+const Sidebar = ({ isOpen, toggleSidebar, onLogout }) => {
+  const location = useLocation();
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: 'fa-gauge', path: '/dashboard' },
-    { id: 'inventory', label: 'Inventory', icon: 'fa-boxes-stacked', path: '/inventory' },
-    { id: 'products', label: 'Products', icon: 'fa-box', path: '/products' },
-    { id: 'suppliers', label: 'Suppliers', icon: 'fa-truck', path: '/suppliers' },
-    { id: 'reports', label: 'Reports', icon: 'fa-chart-line', path: '/reports' },
-    { id: 'settings', label: 'Settings', icon: 'fa-gear', path: '/settings' },
+    { path: '/dashboard', icon: 'fa-chart-pie', label: 'Dashboard' },
+    { path: '/vendor', icon: 'fa-store', label: 'Vendor' },
+    { path: '/product', icon: 'fa-box', label: 'Products' },
+    { path: '/purchase', icon: 'fa-shopping-cart', label: 'Purchase' },
+    { path: '/inventory', icon: 'fa-warehouse', label: 'Inventory' },
+    { path: '/scrap', icon: 'fa-recycle', label: 'Scrap Management' },
+    { path: '/maintenance', icon: 'fa-tools', label: 'Maintenance' },
+    { path: '/reports', icon: 'fa-file-alt', label: 'Reports' },
+    { path: '/users', icon: 'fa-users-cog', label: 'User Management' },
+    { path: '/settings', icon: 'fa-cog', label: 'Settings' },
   ];
 
   return (
     <>
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden transition-opacity duration-300"
-          onClick={onClose}
-        />
-      )}
-
       <aside
-        className={`
-          fixed top-0 left-0 h-full w-64 bg-white shadow-xl z-50
-          transform transition-transform duration-300 ease-smooth
-          ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-          lg:translate-x-0 lg:static
-        `}
+        className={`fixed top-0 left-0 h-screen w-64 bg-white border-r border-gray-200 p-4 z-40 shadow-lg transition-transform duration-300 overflow-y-auto ${
+          isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        }`}
       >
-        <div className="flex items-center gap-3 p-6 border-b border-border">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-brand-primary to-brand-secondary flex items-center justify-center">
-            <i className="fas fa-boxes text-white text-xl"></i>
-          </div>
-          <div>
-            <h1 className="text-lg font-bold text-text-primary">Inventory</h1>
-            <p className="text-xs text-text-muted">Management</p>
-          </div>
-          <button
-            onClick={onClose}
-            className="ml-auto lg:hidden text-text-muted hover:text-brand-primary transition-smooth"
+        {/* Logo/Brand Section */}
+        <div className="flex items-center justify-center mb-5 pb-4 border-b-2 border-gray-200">
+          <Link
+            to="/dashboard"
+            className="flex items-center gap-2.5 text-base font-extrabold text-gray-800 no-underline hover:scale-105 transition-transform duration-200"
           >
-            <i className="fas fa-times text-xl"></i>
-          </button>
+            <i className="fas fa-boxes text-2xl bg-gradient-to-br from-teal-400 to-teal-700 bg-clip-text text-transparent"></i>
+            <span className="bg-gradient-to-br from-teal-400 to-teal-700 bg-clip-text text-transparent">
+              Inventory System
+            </span>
+          </Link>
         </div>
 
-        <nav className="p-4 space-y-2">
-          {menuItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveMenu(item.id)}
-              className={`
-                w-full flex items-center gap-3 px-4 py-3 rounded-lg
-                transition-smooth text-left
-                ${
-                  activeMenu === item.id
-                    ? 'bg-gradient-to-r from-brand-primary to-brand-secondary text-white shadow-md'
-                    : 'text-text-secondary hover:bg-brand-light hover:text-brand-primary'
-                }
-              `}
-            >
-              <i className={`fas ${item.icon} text-lg w-5`}></i>
-              <span className="font-medium">{item.label}</span>
-            </button>
-          ))}
+        {/* Search Bar */}
+        <div className="mb-5 relative">
+          <div className="relative flex items-center">
+            <i className="fas fa-search absolute left-3 text-gray-400 text-sm pointer-events-none"></i>
+            <input
+              type="text"
+              placeholder="Search anything..."
+              className="w-full py-2.5 px-9 border-2 border-gray-200 rounded-md text-sm text-gray-800 bg-white focus:outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all duration-200"
+            />
+          </div>
+        </div>
+
+        {/* Navigation Menu */}
+        <nav>
+          <ul className="space-y-1.5 mb-20 list-none p-0 m-0">
+            {menuItems.map((item) => (
+              <li key={item.path}>
+                <Link
+                  to={item.path}
+                  className={`flex items-center gap-2.5 px-3.5 py-2.5 no-underline rounded-md text-sm font-medium transition-all duration-200 ${
+                    location.pathname === item.path
+                      ? 'bg-gradient-to-br from-teal-400 to-teal-700 text-white shadow-md'
+                      : 'text-gray-600 hover:bg-cyan-50 hover:text-teal-500 hover:translate-x-1'
+                  }`}
+                  onClick={() => {
+                    // Close mobile sidebar on navigation
+                    if (window.innerWidth < 1024) {
+                      toggleSidebar();
+                    }
+                  }}
+                >
+                  <i className={`fas ${item.icon} text-base w-5 text-center`}></i>
+                  <span>{item.label}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border bg-bg-tertiary">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-primary to-brand-secondary flex items-center justify-center text-white font-bold">
-              A
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-text-primary">Admin</p>
-              <p className="text-xs text-text-muted">admin@gmail.com</p>
-            </div>
-            <button className="text-text-muted hover:text-error transition-smooth">
-              <i className="fas fa-sign-out-alt"></i>
-            </button>
-          </div>
-        </div>
+        {/* Logout Button */}
+        <button
+          onClick={onLogout}
+          className="absolute bottom-4 left-4 right-4 flex items-center justify-center gap-2 py-2.5 px-2.5 bg-gradient-to-br from-red-500 to-red-700 text-white border-none rounded-md text-sm font-semibold cursor-pointer hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200"
+        >
+          <i className="fas fa-sign-out-alt text-base"></i>
+          <span>Logout</span>
+        </button>
       </aside>
+
+      {/* Custom Scrollbar Styles */}
+      <style jsx>{`
+        aside {
+          scrollbar-width: thin;
+          scrollbar-color: #0CC0BC #f1f5f9;
+        }
+        
+        aside::-webkit-scrollbar {
+          width: 6px;
+        }
+        
+        aside::-webkit-scrollbar-track {
+          background: #f1f5f9;
+          border-radius: 10px;
+        }
+        
+        aside::-webkit-scrollbar-thumb {
+          background: #0CC0BC;
+          border-radius: 10px;
+          border: 1px solid #f1f5f9;
+        }
+        
+        aside::-webkit-scrollbar-thumb:hover {
+          background: #076A70;
+        }
+      `}</style>
     </>
   );
 };

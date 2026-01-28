@@ -1,17 +1,6 @@
+// src/data/VendorData.jsx
 // ==========================================================================
 // VENDOR DATA MODULE - All vendor data exported for use in Vendor.jsx
-// ==========================================================================
-//
-// This file simulates what would come from your backend API.
-// In production, you would replace these with actual API calls:
-//
-// DUMMY_VENDORS → GET /api/vendors (fetches all vendor records)
-// DUMMY_STATISTICS_DATA → GET /api/vendor-statistics (fetches pre-calculated stats)
-//
-// Example API integration:
-// const vendors = await fetch('/api/vendors').then(res => res.json());
-// const stats = await fetch('/api/vendor-statistics').then(res => res.json());
-//
 // ==========================================================================
 
 export const DUMMY_VENDORS = [
@@ -162,13 +151,9 @@ export const DUMMY_VENDORS = [
 ];
 
 // ==========================================================================
-// DUMMY STATISTICS DATA (Simulating API Response)
+// DUMMY STATISTICS DATA
 // ==========================================================================
-// This simulates what would come from your backend API
-// In production, this would be fetched from: GET /api/vendor-statistics
-
 export const DUMMY_STATISTICS_DATA = {
-  // Total vendors count
   totalVendors: {
     count: 8,
     change: '+2',
@@ -176,31 +161,23 @@ export const DUMMY_STATISTICS_DATA = {
     changeLabel: 'This Month',
     previousMonth: 6
   },
-  
-  // Active vendors statistics
   activeVendors: {
     count: 7,
     percentage: '87.5',
     changeType: 'positive',
     changeLabel: 'Active Rate'
   },
-  
-  // Inactive vendors statistics
   inactiveVendors: {
     count: 1,
     percentage: '12.5',
     changeType: 'negative',
     changeLabel: 'Inactive Rate'
   },
-  
-  // Vendor type distribution
   vendorTypeDistribution: {
     purchaseVendor: 5,
     maintenancePartner: 3,
     scrapDisposalPartner: 3
   },
-  
-  // Additional metrics (for future use)
   additionalMetrics: {
     totalOrders: 276,
     recentlyActive: 7,
@@ -208,8 +185,6 @@ export const DUMMY_STATISTICS_DATA = {
     topPerformingVendor: 'Reliable Hardware Solutions',
     monthlyGrowthRate: '+25%'
   },
-  
-  // Monthly comparison data
   monthlyComparison: {
     currentMonth: {
       vendors: 8,
@@ -222,11 +197,7 @@ export const DUMMY_STATISTICS_DATA = {
       revenue: 980000
     }
   },
-  
-  // Last updated timestamp (ISO format)
   lastUpdated: '2026-01-28T10:30:00Z',
-  
-  // API metadata
   metadata: {
     dataSource: 'vendor_management_db',
     calculatedAt: new Date().toISOString(),
@@ -235,21 +206,10 @@ export const DUMMY_STATISTICS_DATA = {
 };
 
 // ==========================================================================
-// UTILITY FUNCTIONS FOR VENDOR STATISTICS
+// UTILITY FUNCTIONS
 // ==========================================================================
 
-/**
- * Calculate comprehensive vendor statistics from vendor data
- * This function can work with either:
- * 1. Real-time calculation from vendor array (for dynamic updates)
- * 2. Pre-calculated data from API (DUMMY_STATISTICS_DATA)
- * 
- * @param {Array} vendors - Array of vendor objects
- * @param {Object} apiStats - Optional pre-calculated stats from API (DUMMY_STATISTICS_DATA)
- * @returns {Object} Statistics object with various metrics
- */
 export const calculateVendorStats = (vendors, apiStats = null) => {
-  // If API stats are provided, use them (simulating real API behavior)
   if (apiStats) {
     return {
       total: apiStats.totalVendors.count,
@@ -267,7 +227,6 @@ export const calculateVendorStats = (vendors, apiStats = null) => {
     };
   }
   
-  // Otherwise, calculate from vendor array (fallback/real-time calculation)
   const total = vendors.length;
   const activeVendors = vendors.filter(v => v.status === 'active');
   const inactiveVendors = vendors.filter(v => v.status === 'inactive');
@@ -275,11 +234,9 @@ export const calculateVendorStats = (vendors, apiStats = null) => {
   const activeCount = activeVendors.length;
   const inactiveCount = inactiveVendors.length;
   
-  // Calculate percentages
   const activeRate = total > 0 ? ((activeCount / total) * 100).toFixed(1) : '0.0';
   const inactiveRate = total > 0 ? ((inactiveCount / total) * 100).toFixed(1) : '0.0';
   
-  // Calculate vendor type distribution
   const vendorTypeDistribution = {
     purchaseVendor: 0,
     maintenancePartner: 0,
@@ -293,7 +250,6 @@ export const calculateVendorStats = (vendors, apiStats = null) => {
     if (types.includes('Scrap Disposal Partner')) vendorTypeDistribution.scrapDisposalPartner++;
   });
   
-  // Calculate recent activity (vendors with orders in last 30 days)
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   
@@ -303,7 +259,6 @@ export const calculateVendorStats = (vendors, apiStats = null) => {
     return orderDate >= thirtyDaysAgo;
   }).length;
   
-  // Calculate total orders across all vendors
   const totalOrders = vendors.reduce((sum, vendor) => sum + (vendor.totalOrders || 0), 0);
   
   return {
@@ -320,17 +275,10 @@ export const calculateVendorStats = (vendors, apiStats = null) => {
   };
 };
 
-/**
- * Get filtered vendors based on search and filter criteria
- * @param {Array} vendors - Array of vendor objects
- * @param {Object} filters - Filter criteria
- * @returns {Array} Filtered vendors
- */
 export const getFilteredVendors = (vendors, filters = {}) => {
   const { searchValue = '', filterStatus = '', filterType = '' } = filters;
   
   return vendors.filter(vendor => {
-    // Search filter
     const matchesSearch = !searchValue || (
       vendor.vendorName.toLowerCase().includes(searchValue.toLowerCase()) ||
       (vendor.companyName && vendor.companyName.toLowerCase().includes(searchValue.toLowerCase())) ||
@@ -340,10 +288,8 @@ export const getFilteredVendors = (vendors, filters = {}) => {
       vendor.state.toLowerCase().includes(searchValue.toLowerCase())
     );
     
-    // Status filter
     const matchesStatus = !filterStatus || vendor.status === filterStatus;
     
-    // Type filter
     const vendorTypes = Array.isArray(vendor.vendorType) ? vendor.vendorType : [vendor.vendorType];
     const matchesType = !filterType || vendorTypes.includes(filterType);
     
@@ -351,15 +297,9 @@ export const getFilteredVendors = (vendors, filters = {}) => {
   });
 };
 
-/**
- * Validate vendor data before saving
- * @param {Object} vendorData - Vendor data to validate
- * @returns {Object} Validation result with isValid and errors
- */
 export const validateVendorData = (vendorData) => {
   const errors = [];
   
-  // Required field validations
   if (!vendorData.vendorName || vendorData.vendorName.trim().length < 3) {
     errors.push('Vendor name must be at least 3 characters long');
   }
@@ -368,30 +308,25 @@ export const validateVendorData = (vendorData) => {
     errors.push('Company name must be at least 3 characters long');
   }
   
-  // Contact validation
   if (!vendorData.contact || vendorData.contact.length !== 10) {
     errors.push('Contact number must be 10 digits');
   } else if (!['6', '7', '8', '9'].includes(vendorData.contact.charAt(0))) {
     errors.push('Contact number must start with 6, 7, 8 or 9');
   }
   
-  // Email validation
   const emailRegex = /^[^\s@]+@[^\s@]+\.(com|in|org|net|co\.in)$/i;
   if (!vendorData.email || !emailRegex.test(vendorData.email)) {
     errors.push('Invalid email format');
   }
   
-  // Address validation
   if (!vendorData.address || vendorData.address.trim().length < 10) {
     errors.push('Address must be at least 10 characters long');
   }
   
-  // Pincode validation
   if (!vendorData.pincode || vendorData.pincode.length !== 6 || vendorData.pincode.charAt(0) === '0') {
     errors.push('Invalid pincode format');
   }
   
-  // City and State validation
   if (!vendorData.city || vendorData.city.trim().length < 2) {
     errors.push('City name must be at least 2 characters long');
   }
@@ -400,7 +335,6 @@ export const validateVendorData = (vendorData) => {
     errors.push('State name must be at least 2 characters long');
   }
   
-  // GST validation (optional but must be valid if provided)
   if (vendorData.gst && vendorData.gst.trim().length > 0) {
     const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
     if (!gstRegex.test(vendorData.gst)) {
@@ -408,7 +342,6 @@ export const validateVendorData = (vendorData) => {
     }
   }
   
-  // Vendor type validation
   if (!vendorData.vendorTypes || vendorData.vendorTypes.length === 0) {
     errors.push('At least one vendor type must be selected');
   }
@@ -419,11 +352,6 @@ export const validateVendorData = (vendorData) => {
   };
 };
 
-/**
- * Generate avatar initials and color for new vendor
- * @param {String} companyName - Company name
- * @returns {Object} Avatar data with initials and color
- */
 export const generateVendorAvatar = (companyName) => {
   const colors = [
     '#17a2b8', '#fd7e14', '#20c997', '#28a745', 
@@ -446,7 +374,7 @@ export const generateVendorAvatar = (companyName) => {
 };
 
 // ==========================================================================
-// CONSTANTS FOR VENDOR TYPES
+// CONSTANTS
 // ==========================================================================
 
 export const VENDOR_TYPES = {
