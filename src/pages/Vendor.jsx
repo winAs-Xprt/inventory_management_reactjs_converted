@@ -79,8 +79,9 @@ const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, type = 'war
             </button>
             <button
               onClick={onConfirm}
-              className={`flex-1 px-5 py-3 text-white rounded-md text-sm font-semibold cursor-pointer hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 ${isDanger ? 'bg-red-500 hover:bg-red-600' : 'bg-teal-500 hover:bg-teal-600'
-                }`}
+              className={`flex-1 px-5 py-3 text-white rounded-md text-sm font-semibold cursor-pointer hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 ${
+                isDanger ? 'bg-red-500 hover:bg-red-600' : 'bg-teal-500 hover:bg-teal-600'
+              }`}
             >
               <i className="fas fa-check"></i>
               Confirm
@@ -154,13 +155,15 @@ const VendorTypeBadge = ({ type }) => {
 };
 
 // ==========================================================================
-// VENDOR MODAL COMPONENT
+// VENDOR MODAL COMPONENT - UPDATED WITH ALL NEW FEATURES
 // ==========================================================================
 const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
   const [formData, setFormData] = useState({
     vendorName: '',
     companyName: '',
     contact: '',
+    whatsappSameAsPhone: true, // NEW FIELD
+    whatsappNumber: '', // NEW FIELD
     email: '',
     address: '',
     pincode: '',
@@ -179,6 +182,7 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
 
   useEffect(() => {
     if (vendor) {
+      // EDITING MODE
       const contactNumber = vendor.contact.replace('+91 ', '').replace(/\s/g, '');
       const vendorTypes = Array.isArray(vendor.vendorType) ? vendor.vendorType : [vendor.vendorType];
 
@@ -186,6 +190,8 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
         vendorName: vendor.vendorName,
         companyName: vendor.companyName || vendor.vendorName,
         contact: contactNumber,
+        whatsappSameAsPhone: vendor.whatsappSameAsPhone !== undefined ? vendor.whatsappSameAsPhone : true,
+        whatsappNumber: vendor.whatsappNumber || contactNumber,
         email: vendor.email,
         address: vendor.address,
         pincode: vendor.pincode,
@@ -200,17 +206,20 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
         }
       });
     } else {
+      // CREATE MODE - Default to Active
       setFormData({
         vendorName: '',
         companyName: '',
         contact: '',
+        whatsappSameAsPhone: true,
+        whatsappNumber: '',
         email: '',
         address: '',
         pincode: '',
         city: '',
         state: '',
         gst: '',
-        status: VENDOR_STATUS.ACTIVE,
+        status: VENDOR_STATUS.ACTIVE, // Always active for new vendors
         vendorTypes: {
           purchaseVendor: false,
           maintenancePartner: false,
@@ -224,6 +233,7 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    // Validate vendor type selection
     const selectedTypes = [];
     if (formData.vendorTypes.purchaseVendor) selectedTypes.push(VENDOR_TYPES.PURCHASE);
     if (formData.vendorTypes.maintenancePartner) selectedTypes.push(VENDOR_TYPES.MAINTENANCE);
@@ -235,19 +245,31 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
     }
 
     setVendorTypeError(false);
-    onSave({ ...formData, vendorTypes: selectedTypes });
+    
+    // Prepare final WhatsApp number
+    const finalWhatsappNumber = formData.whatsappSameAsPhone ? formData.contact : formData.whatsappNumber;
+    
+    onSave({ 
+      ...formData, 
+      vendorTypes: selectedTypes,
+      whatsappNumber: finalWhatsappNumber
+    });
   };
 
   if (!isOpen) return null;
+
+  const isEditMode = !!vendor;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-[9999] p-5">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
       <div className="relative w-full max-w-2xl max-h-[90vh] animate-in fade-in duration-300">
         <div className="bg-white rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-          <div className="px-6 py-5 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-            <h2 className="text-lg font-bold text-gray-800">
-              {vendor ? 'Edit Vendor' : 'Add New Vendor'}
+          {/* Header */}
+          <div className="px-6 py-5 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-teal-50 to-cyan-50">
+            <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+              <i className={`fas ${isEditMode ? 'fa-edit' : 'fa-plus-circle'} text-teal-500`}></i>
+              {isEditMode ? 'Edit Vendor' : 'Add New Vendor'}
             </h2>
             <button
               onClick={onClose}
@@ -257,9 +279,11 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
             </button>
           </div>
 
+          {/* Body */}
           <div className="p-6 overflow-y-auto flex-1">
-            <form onSubmit={handleSubmit}>
-              {/* Vendor Name & Company Name */}
+            <form onSubmit={handleSubmit} id="vendorForm">
+              
+              {/* Vendor Name & Company Name - REQUIRED */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
@@ -270,14 +294,14 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
                     type="text"
                     value={formData.vendorName}
                     onChange={(e) => setFormData({ ...formData, vendorName: e.target.value })}
-                    placeholder="Contact person"
+                    placeholder="Contact person name"
                     required
                     minLength="3"
                     maxLength="100"
                     className="py-2.5 px-3 border-2 border-gray-200 rounded-md text-gray-800 text-sm outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all duration-200 w-full bg-white"
                   />
                   <small className="text-gray-500 text-xs block mt-1">
-                    <i className="fas fa-info-circle"></i> Contact person name
+                    <i className="fas fa-info-circle"></i> Contact person name (required)
                   </small>
                 </div>
 
@@ -290,19 +314,19 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
                     type="text"
                     value={formData.companyName}
                     onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                    placeholder="Company name"
+                    placeholder="Registered company name"
                     required
                     minLength="3"
                     maxLength="100"
                     className="py-2.5 px-3 border-2 border-gray-200 rounded-md text-gray-800 text-sm outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all duration-200 w-full bg-white"
                   />
                   <small className="text-gray-500 text-xs block mt-1">
-                    <i className="fas fa-info-circle"></i> Registered company
+                    <i className="fas fa-info-circle"></i> Registered company name (required)
                   </small>
                 </div>
               </div>
 
-              {/* Vendor Type Selection */}
+              {/* Vendor Type Selection - REQUIRED */}
               <div className="flex flex-col gap-1.5 mb-4">
                 <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
                   <i className="fas fa-tags text-teal-500"></i>
@@ -358,7 +382,7 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
                   </label>
                 </div>
                 <small className="text-gray-500 text-xs block mt-1">
-                  <i className="fas fa-info-circle"></i> Select one or more vendor types (minimum 1 required)
+                  <i className="fas fa-info-circle"></i> Select at least one vendor type (required)
                 </small>
                 {vendorTypeError && (
                   <small className="text-red-500 text-xs block mt-1 font-semibold">
@@ -367,12 +391,12 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
                 )}
               </div>
 
-              {/* Contact & Email */}
+              {/* Contact Number with WhatsApp Checkbox - OPTIONAL */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
                     <i className="fas fa-phone text-teal-500"></i>
-                    Contact Number <span className="text-red-500">*</span>
+                    Contact Number <small className="text-gray-500 font-normal">(Optional)</small>
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-semibold pointer-events-none">+91</span>
@@ -384,63 +408,125 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
                         setFormData({ ...formData, contact: value });
                       }}
                       placeholder="9876543210"
-                      required
                       maxLength="10"
                       className="py-2.5 pl-12 pr-3 border-2 border-gray-200 rounded-md text-gray-800 text-sm outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all duration-200 w-full bg-white"
                     />
                   </div>
+                  
+                  {/* WhatsApp Checkbox - NEW FEATURE */}
+                  <label className="flex items-center gap-2 mt-2 p-2.5 bg-green-50 rounded-md border border-green-200 cursor-pointer hover:bg-green-100 transition-all">
+                    <input
+                      type="checkbox"
+                      checked={formData.whatsappSameAsPhone}
+                      onChange={(e) => setFormData({ ...formData, whatsappSameAsPhone: e.target.checked })}
+                      className="w-4 h-4 cursor-pointer accent-green-500"
+                    />
+                    <span className="flex items-center gap-1.5 text-xs font-medium text-gray-700">
+                      <i className="fab fa-whatsapp text-green-500"></i>
+                      Is this your WhatsApp number too?
+                    </span>
+                  </label>
+                  
                   <small className="text-gray-500 text-xs block mt-1">
-                    <i className="fas fa-info-circle"></i> Enter 10-digit mobile number starting with 6, 7, 8 or 9
+                    <i className="fas fa-info-circle"></i> 10-digit mobile number (optional)
                   </small>
                 </div>
 
-                <div className="flex flex-col gap-1.5">
+                {/* Separate WhatsApp Number Field (shown only if checkbox is unchecked) */}
+                {!formData.whatsappSameAsPhone && (
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
+                      <i className="fab fa-whatsapp text-green-500"></i>
+                      WhatsApp Number <small className="text-gray-500 font-normal">(Optional)</small>
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-semibold pointer-events-none">+91</span>
+                      <input
+                        type="text"
+                        value={formData.whatsappNumber}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 10);
+                          setFormData({ ...formData, whatsappNumber: value });
+                        }}
+                        placeholder="9876543210"
+                        maxLength="10"
+                        className="py-2.5 pl-12 pr-3 border-2 border-green-200 rounded-md text-gray-800 text-sm outline-none focus:border-green-400 focus:ring-4 focus:ring-green-100 transition-all duration-200 w-full bg-white"
+                      />
+                    </div>
+                    <small className="text-gray-500 text-xs block mt-1">
+                      <i className="fas fa-info-circle"></i> Different WhatsApp number (optional)
+                    </small>
+                  </div>
+                )}
+
+                {/* Email - OPTIONAL */}
+                {formData.whatsappSameAsPhone && (
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
+                      <i className="fas fa-envelope text-teal-500"></i>
+                      Email Address <small className="text-gray-500 font-normal">(Optional)</small>
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value.toLowerCase() })}
+                      placeholder="vendor@example.com"
+                      maxLength="100"
+                      className="py-2.5 px-3 border-2 border-gray-200 rounded-md text-gray-800 text-sm outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all duration-200 w-full bg-white"
+                    />
+                    <small className="text-gray-500 text-xs block mt-1">
+                      <i className="fas fa-info-circle"></i> Valid email format (optional)
+                    </small>
+                  </div>
+                )}
+              </div>
+
+              {/* Email (if WhatsApp is separate) - OPTIONAL */}
+              {!formData.whatsappSameAsPhone && (
+                <div className="flex flex-col gap-1.5 mb-4">
                   <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
                     <i className="fas fa-envelope text-teal-500"></i>
-                    Email Address <span className="text-red-500">*</span>
+                    Email Address <small className="text-gray-500 font-normal">(Optional)</small>
                   </label>
                   <input
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value.toLowerCase() })}
                     placeholder="vendor@example.com"
-                    required
                     maxLength="100"
                     className="py-2.5 px-3 border-2 border-gray-200 rounded-md text-gray-800 text-sm outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all duration-200 w-full bg-white"
                   />
                   <small className="text-gray-500 text-xs block mt-1">
-                    <i className="fas fa-info-circle"></i> Must contain @ and end with .com, .in, .org, .net, .co.in
+                    <i className="fas fa-info-circle"></i> Valid email format (optional)
                   </small>
                 </div>
-              </div>
+              )}
 
-              {/* Address */}
+              {/* Address - OPTIONAL */}
               <div className="flex flex-col gap-1.5 mb-4">
                 <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
                   <i className="fas fa-map-marker-alt text-teal-500"></i>
-                  Address <span className="text-red-500">*</span>
+                  Address <small className="text-gray-500 font-normal">(Optional)</small>
                 </label>
                 <textarea
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   rows="2"
                   placeholder="Enter complete address with building/street/landmark"
-                  required
-                  minLength="10"
                   maxLength="500"
                   className="py-2.5 px-3 border-2 border-gray-200 rounded-md text-gray-800 text-sm outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all duration-200 w-full bg-white resize-y min-h-[60px]"
                 ></textarea>
                 <small className="text-gray-500 text-xs block mt-1">
-                  <i className="fas fa-info-circle"></i> Complete address (minimum 10 characters)
+                  <i className="fas fa-info-circle"></i> Complete address (optional)
                 </small>
               </div>
 
-              {/* Pincode, City, State */}
+              {/* Pincode, City, State - OPTIONAL */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
                     <i className="fas fa-map-pin text-teal-500"></i>
-                    Pincode <span className="text-red-500">*</span>
+                    Pincode <small className="text-gray-500 font-normal">(Optional)</small>
                   </label>
                   <input
                     type="text"
@@ -450,20 +536,18 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
                       setFormData({ ...formData, pincode: value });
                     }}
                     placeholder="600001"
-                    required
-                    minLength="6"
                     maxLength="6"
                     className="py-2.5 px-3 border-2 border-gray-200 rounded-md text-gray-800 text-sm outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all duration-200 w-full bg-white"
                   />
                   <small className="text-gray-500 text-xs block mt-1">
-                    <i className="fas fa-info-circle"></i> 6-digit Indian pincode
+                    <i className="fas fa-info-circle"></i> 6-digit pincode
                   </small>
                 </div>
 
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
                     <i className="fas fa-city text-teal-500"></i>
-                    City <span className="text-red-500">*</span>
+                    City <small className="text-gray-500 font-normal">(Optional)</small>
                   </label>
                   <input
                     type="text"
@@ -473,20 +557,18 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
                       setFormData({ ...formData, city: value });
                     }}
                     placeholder="Chennai"
-                    required
-                    minLength="2"
                     maxLength="50"
                     className="py-2.5 px-3 border-2 border-gray-200 rounded-md text-gray-800 text-sm outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all duration-200 w-full bg-white"
                   />
                   <small className="text-gray-500 text-xs block mt-1">
-                    <i className="fas fa-info-circle"></i> City name (letters only)
+                    <i className="fas fa-info-circle"></i> City name
                   </small>
                 </div>
 
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
                     <i className="fas fa-map text-teal-500"></i>
-                    State <span className="text-red-500">*</span>
+                    State <small className="text-gray-500 font-normal">(Optional)</small>
                   </label>
                   <input
                     type="text"
@@ -496,23 +578,22 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
                       setFormData({ ...formData, state: value });
                     }}
                     placeholder="Tamil Nadu"
-                    required
-                    minLength="2"
                     maxLength="50"
                     className="py-2.5 px-3 border-2 border-gray-200 rounded-md text-gray-800 text-sm outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all duration-200 w-full bg-white"
                   />
                   <small className="text-gray-500 text-xs block mt-1">
-                    <i className="fas fa-info-circle"></i> State name (letters only)
+                    <i className="fas fa-info-circle"></i> State name
                   </small>
                 </div>
               </div>
 
               {/* GST & Status */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                {/* GST - OPTIONAL */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
                     <i className="fas fa-file-invoice text-teal-500"></i>
-                    GST Number <small className="text-gray-500">(Optional)</small>
+                    GST Number <small className="text-gray-500 font-normal">(Optional)</small>
                   </label>
                   <input
                     type="text"
@@ -526,29 +607,54 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
                     className="py-2.5 px-3 border-2 border-gray-200 rounded-md text-gray-800 text-sm outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all duration-200 w-full bg-white"
                   />
                   <small className="text-gray-500 text-xs block mt-1">
-                    <i className="fas fa-info-circle"></i> 15-character GST format: 33AAAPL1234C1Z9
+                    <i className="fas fa-info-circle"></i> 15-character GST format (optional)
                   </small>
                 </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
-                    <i className="fas fa-toggle-on text-teal-500"></i>
-                    Status <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    required
-                    className="py-2.5 px-3 border-2 border-gray-200 rounded-md text-gray-800 text-sm outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all duration-200 w-full bg-white cursor-pointer"
-                  >
-                    <option value={VENDOR_STATUS.ACTIVE}>Active</option>
-                    <option value={VENDOR_STATUS.INACTIVE}>Inactive</option>
-                  </select>
-                </div>
+                {/* Status - ONLY SHOW WHEN EDITING */}
+                {isEditMode && (
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
+                      <i className="fas fa-toggle-on text-teal-500"></i>
+                      Status <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={formData.status}
+                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                      required
+                      className="py-2.5 px-3 border-2 border-gray-200 rounded-md text-gray-800 text-sm outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all duration-200 w-full bg-white cursor-pointer"
+                    >
+                      <option value={VENDOR_STATUS.ACTIVE}>Active</option>
+                      <option value={VENDOR_STATUS.INACTIVE}>Inactive</option>
+                    </select>
+                    <small className="text-gray-500 text-xs block mt-1">
+                      <i className="fas fa-info-circle"></i> Change vendor status
+                    </small>
+                  </div>
+                )}
+
+                {/* When creating new vendor, show info message instead */}
+                {!isEditMode && (
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
+                      <i className="fas fa-toggle-on text-teal-500"></i>
+                      Status
+                    </label>
+                    <div className="py-2.5 px-3 border-2 border-green-200 bg-green-50 rounded-md text-sm flex items-center gap-2">
+                      <i className="fas fa-check-circle text-green-500"></i>
+                      <span className="text-green-700 font-semibold">Will be set to Active by default</span>
+                    </div>
+                    <small className="text-gray-500 text-xs block mt-1">
+                      <i className="fas fa-info-circle"></i> New vendors are automatically active
+                    </small>
+                  </div>
+                )}
               </div>
+
             </form>
           </div>
 
+          {/* Footer */}
           <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-2.5 bg-gray-50">
             <button
               onClick={onClose}
@@ -562,7 +668,7 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
               className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-gradient-to-br from-teal-400 to-teal-700 text-white border-none rounded-md text-sm font-semibold cursor-pointer shadow-sm hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200"
             >
               <i className="fas fa-save text-sm"></i>
-              Save Vendor
+              {isEditMode ? 'Update Vendor' : 'Save Vendor'}
             </button>
           </div>
         </div>
@@ -626,8 +732,9 @@ const ViewVendorModal = ({ isOpen, onClose, vendor }) => {
                     <i className="fas fa-toggle-on text-teal-500"></i>
                     <strong>Status:</strong>
                   </div>
-                  <span className={`inline-block px-2.5 py-1 rounded text-xs font-bold uppercase tracking-wide ${vendor.status === VENDOR_STATUS.ACTIVE ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
-                    }`}>
+                  <span className={`inline-block px-2.5 py-1 rounded text-xs font-bold uppercase tracking-wide ${
+                    vendor.status === VENDOR_STATUS.ACTIVE ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
+                  }`}>
                     {vendor.status}
                   </span>
                 </div>
@@ -648,6 +755,16 @@ const ViewVendorModal = ({ isOpen, onClose, vendor }) => {
                   <p className="m-0 text-gray-700">{vendor.email}</p>
                 </div>
               </div>
+
+              {vendor.whatsappNumber && (
+                <div className="p-4 bg-green-50 rounded-md border border-green-200">
+                  <div className="flex items-center gap-2 mb-2">
+                    <i className="fab fa-whatsapp text-green-500"></i>
+                    <strong>WhatsApp:</strong>
+                  </div>
+                  <p className="m-0 text-gray-700">+91 {vendor.whatsappNumber}</p>
+                </div>
+              )}
 
               <div className="p-4 bg-gray-50 rounded-md">
                 <div className="flex items-center gap-2 mb-2">
@@ -722,22 +839,18 @@ const Vendor = () => {
 
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
-  // Initialize vendors from dummy data
   useEffect(() => {
     setVendors(DUMMY_VENDORS);
   }, []);
 
-  // Calculate statistics
   const stats = useMemo(() => {
     return calculateVendorStats(vendors, DUMMY_STATISTICS_DATA);
   }, [vendors]);
 
-  // Filter vendors
   const filteredVendors = useMemo(() => {
     return getFilteredVendors(vendors, { searchValue, filterStatus, filterType });
   }, [vendors, searchValue, filterStatus, filterType]);
 
-  // Toast notification handler
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
     setTimeout(() => {
@@ -745,65 +858,51 @@ const Vendor = () => {
     }, 3000);
   };
 
-  // Handle Refresh
-const handleRefresh = () => {
-  // Show loading state with spinning icon
-  const refreshButton = document.querySelector('[title="Refresh vendor list"] i');
-  if (refreshButton) {
-    refreshButton.classList.add('fa-spin');
-  }
-
-  // Show refreshing toast
-  showToast('Refreshing vendor data...', 'info');
-
-  // Simulate data refresh (in real app, this would be an API call)
-  setTimeout(() => {
-    // Reset vendors to original dummy data
-    setVendors(DUMMY_VENDORS);
-    
-    // Clear all filters
-    setSearchValue('');
-    setFilterStatus('');
-    setFilterType('');
-    setSelectedVendors([]);
-    
-    // Stop spinning
+  const handleRefresh = () => {
+    const refreshButton = document.querySelector('[title="Refresh vendor list"] i');
     if (refreshButton) {
-      refreshButton.classList.remove('fa-spin');
+      refreshButton.classList.add('fa-spin');
     }
-    
-    // Show success message AFTER refresh completes
-    setTimeout(() => {
-      showToast('Vendor list refreshed successfully', 'success');
-    }, 100);
-  }, 800);
-};
 
-  // Handle Add Vendor
+    showToast('Refreshing vendor data...', 'info');
+
+    setTimeout(() => {
+      setVendors(DUMMY_VENDORS);
+      setSearchValue('');
+      setFilterStatus('');
+      setFilterType('');
+      setSelectedVendors([]);
+      
+      if (refreshButton) {
+        refreshButton.classList.remove('fa-spin');
+      }
+      
+      setTimeout(() => {
+        showToast('Vendor list refreshed successfully', 'success');
+      }, 100);
+    }, 800);
+  };
+
   const handleAddVendor = () => {
     setEditingVendor(null);
     setShowModal(true);
   };
 
-  // Handle Edit Vendor
   const handleEditVendor = (vendor) => {
     setEditingVendor(vendor);
     setShowModal(true);
   };
 
-  // Handle View Vendor
   const handleViewVendor = (vendor) => {
     setViewingVendor(vendor);
     setShowViewModal(true);
   };
 
-  // Handle Delete Vendor (Single)
   const handleDeleteVendor = (id) => {
     setDeletingVendorId(id);
     setShowConfirmModal(true);
   };
 
-  // Confirm Delete
   const confirmDelete = () => {
     if (deletingVendorId) {
       setVendors(vendors.filter(v => v.id !== deletingVendorId));
@@ -817,13 +916,11 @@ const handleRefresh = () => {
     setShowConfirmModal(false);
   };
 
-  // Handle Bulk Delete
   const handleBulkDelete = () => {
     setDeletingVendorId(null);
     setShowConfirmModal(true);
   };
 
-  // Handle Save Vendor (Add/Edit)
   const handleSaveVendor = (formData) => {
     if (editingVendor) {
       // Edit existing vendor
@@ -831,7 +928,9 @@ const handleRefresh = () => {
         ...editingVendor,
         vendorName: formData.vendorName,
         companyName: formData.companyName,
-        contact: `+91 ${formData.contact}`,
+        contact: formData.contact ? `+91 ${formData.contact}` : '',
+        whatsappSameAsPhone: formData.whatsappSameAsPhone,
+        whatsappNumber: formData.whatsappNumber,
         email: formData.email,
         address: formData.address,
         pincode: formData.pincode,
@@ -845,20 +944,22 @@ const handleRefresh = () => {
       setVendors(vendors.map(v => v.id === editingVendor.id ? updatedVendor : v));
       showToast('Vendor updated successfully', 'success');
     } else {
-      // Add new vendor
+      // Add new vendor - Always set to Active
       const avatarData = generateVendorAvatar(formData.companyName);
       const newVendor = {
         id: Date.now(),
         vendorName: formData.vendorName,
         companyName: formData.companyName,
-        contact: `+91 ${formData.contact}`,
+        contact: formData.contact ? `+91 ${formData.contact}` : '',
+        whatsappSameAsPhone: formData.whatsappSameAsPhone,
+        whatsappNumber: formData.whatsappNumber,
         email: formData.email,
         address: formData.address,
         pincode: formData.pincode,
         city: formData.city,
         state: formData.state,
         gst: formData.gst,
-        status: formData.status,
+        status: VENDOR_STATUS.ACTIVE, // Always Active for new vendors
         vendorType: formData.vendorTypes,
         lastOrderDate: new Date().toISOString().split('T')[0],
         totalOrders: 0,
@@ -874,7 +975,6 @@ const handleRefresh = () => {
     setEditingVendor(null);
   };
 
-  // Handle Select All
   const handleSelectAll = (e) => {
     if (e.target.checked) {
       setSelectedVendors(filteredVendors.map(v => v.id));
@@ -883,14 +983,12 @@ const handleRefresh = () => {
     }
   };
 
-  // Handle Select Single
   const handleSelectVendor = (id) => {
     setSelectedVendors(prev =>
       prev.includes(id) ? prev.filter(vid => vid !== id) : [...prev, id]
     );
   };
 
-  // Clear Filters
   const clearFilters = () => {
     setSearchValue('');
     setFilterStatus('');
@@ -899,7 +997,6 @@ const handleRefresh = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-gray-50 to-cyan-50 p-5">
-      {/* Header */}
       {/* Header */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6 flex justify-between items-center flex-wrap gap-4">
         <div className="flex-1">
@@ -925,10 +1022,8 @@ const handleRefresh = () => {
             <i className="fas fa-sync-alt"></i>
             Refresh
           </button>
-
         </div>
       </div>
-
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
@@ -1018,170 +1113,169 @@ const handleRefresh = () => {
         </div>
       </div>
 
-    {/* Vendor Table */}
-<div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm mb-6">
-  <div className="bg-gray-50 p-4 border-b-2 border-gray-200 flex justify-between items-center flex-wrap gap-4">
-    <div className="flex items-center gap-2.5 text-lg font-bold text-gray-800">
-      <i className="fas fa-list text-teal-500 text-xl"></i>
-      Vendor Directory ({filteredVendors.length})
-    </div>
-    <div className="flex gap-2 flex-wrap">
-      <button className="px-4 py-2 bg-gray-50 text-gray-700 border border-gray-200 rounded-md text-sm font-semibold cursor-pointer transition-all hover:bg-white hover:border-teal-400 hover:text-teal-500 flex items-center gap-2">
-        <i className="fas fa-download"></i>
-        Export
-      </button>
-    </div>
-  </div>
+      {/* Vendor Table */}
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm mb-6">
+        <div className="bg-gray-50 p-4 border-b-2 border-gray-200 flex justify-between items-center flex-wrap gap-4">
+          <div className="flex items-center gap-2.5 text-lg font-bold text-gray-800">
+            <i className="fas fa-list text-teal-500 text-xl"></i>
+            Vendor Directory ({filteredVendors.length})
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <button className="px-4 py-2 bg-gray-50 text-gray-700 border border-gray-200 rounded-md text-sm font-semibold cursor-pointer transition-all hover:bg-white hover:border-teal-400 hover:text-teal-500 flex items-center gap-2">
+              <i className="fas fa-download"></i>
+              Export
+            </button>
+          </div>
+        </div>
 
-  {selectedVendors.length > 0 && (
-    <div className="bg-cyan-50 p-4 border-b-2 border-gray-200 flex justify-between items-center gap-4 flex-wrap">
-      <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-        <i className="fas fa-check-square text-teal-500 text-base"></i>
-        <span className="text-teal-600 font-bold text-base">{selectedVendors.length}</span> vendors selected
-      </div>
-      <div className="flex gap-2 items-center flex-wrap">
-        <button
-          onClick={handleBulkDelete}
-          className="px-4 py-2 bg-gradient-to-br from-red-500 to-red-700 text-white border-none rounded-md text-sm font-semibold cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg flex items-center gap-2"
-        >
-          <i className="fas fa-trash"></i>
-          Delete Selected
-        </button>
-      </div>
-    </div>
-  )}
+        {selectedVendors.length > 0 && (
+          <div className="bg-cyan-50 p-4 border-b-2 border-gray-200 flex justify-between items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+              <i className="fas fa-check-square text-teal-500 text-base"></i>
+              <span className="text-teal-600 font-bold text-base">{selectedVendors.length}</span> vendors selected
+            </div>
+            <div className="flex gap-2 items-center flex-wrap">
+              <button
+                onClick={handleBulkDelete}
+                className="px-4 py-2 bg-gradient-to-br from-red-500 to-red-700 text-white border-none rounded-md text-sm font-semibold cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg flex items-center gap-2"
+              >
+                <i className="fas fa-trash"></i>
+                Delete Selected
+              </button>
+            </div>
+          </div>
+        )}
 
-  <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-    <table className="w-full border-collapse min-w-[1400px]">
-      <thead className="sticky top-0 z-10 bg-gray-50">
-        <tr>
-          <th className="p-3 text-left border-b border-gray-200 font-bold text-gray-600 text-xs uppercase tracking-wider bg-gray-50 w-12">
-            <input
-              type="checkbox"
-              onChange={handleSelectAll}
-              checked={selectedVendors.length === filteredVendors.length && filteredVendors.length > 0}
-              className="w-4 h-4 cursor-pointer accent-teal-500"
-            />
-          </th>
-          <th className="p-3 text-left border-b border-gray-200 font-bold text-gray-600 text-xs uppercase tracking-wider bg-gray-50 w-16">ID</th>
-          <th className="p-3 text-left border-b border-gray-200 font-bold text-gray-600 text-xs uppercase tracking-wider bg-gray-50">Vendor Details</th>
-          <th className="p-3 text-left border-b border-gray-200 font-bold text-gray-600 text-xs uppercase tracking-wider bg-gray-50">Contact Info</th>
-          <th className="p-3 text-left border-b border-gray-200 font-bold text-gray-600 text-xs uppercase tracking-wider bg-gray-50">Location & GST</th>
-          <th className="p-3 text-left border-b border-gray-200 font-bold text-gray-600 text-xs uppercase tracking-wider bg-gray-50">Type of Vendor</th>
-          <th className="p-3 text-left border-b border-gray-200 font-bold text-gray-600 text-xs uppercase tracking-wider bg-gray-50 w-24">Status</th>
-          <th className="p-3 text-left border-b border-gray-200 font-bold text-gray-600 text-xs uppercase tracking-wider bg-gray-50 w-32">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {filteredVendors.length > 0 ? (
-          filteredVendors.map((vendor) => {
-            const vendorTypes = Array.isArray(vendor.vendorType) ? vendor.vendorType : [vendor.vendorType];
-            return (
-              <tr key={vendor.id} className="transition-all hover:bg-cyan-50">
-                <td className="p-3 border-b border-gray-200 text-gray-800 text-sm">
+        <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+          <table className="w-full border-collapse min-w-[1400px]">
+            <thead className="sticky top-0 z-10 bg-gray-50">
+              <tr>
+                <th className="p-3 text-left border-b border-gray-200 font-bold text-gray-600 text-xs uppercase tracking-wider bg-gray-50 w-12">
                   <input
                     type="checkbox"
-                    checked={selectedVendors.includes(vendor.id)}
-                    onChange={() => handleSelectVendor(vendor.id)}
+                    onChange={handleSelectAll}
+                    checked={selectedVendors.length === filteredVendors.length && filteredVendors.length > 0}
                     className="w-4 h-4 cursor-pointer accent-teal-500"
                   />
-                </td>
-                <td className="p-3 border-b border-gray-200 text-gray-800 text-sm">
-                  <div className="font-bold text-gray-700">#{vendor.id}</div>
-                </td>
-                <td className="p-3 border-b border-gray-200 text-gray-800 text-sm">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
-                      style={{ backgroundColor: vendor.avatarColor }}
-                    >
-                      {vendor.avatar}
-                    </div>
-                    <div>
-                      <div className="font-bold text-gray-800">{vendor.companyName}</div>
-                      <div className="text-xs text-gray-500">ID: {vendor.id}</div>
-                    </div>
-                  </div>
-                </td>
-                <td className="p-3 border-b border-gray-200 text-gray-800 text-sm">
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-1.5 text-gray-700">
-                      <i className="fas fa-phone text-teal-500 text-xs w-3"></i>
-                      <span className="text-xs">{vendor.contact}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-gray-700">
-                      <i className="fas fa-envelope text-teal-500 text-xs w-3"></i>
-                      <span className="text-xs">{vendor.email}</span>
-                    </div>
-                  </div>
-                </td>
-                <td className="p-3 border-b border-gray-200 text-gray-800 text-sm">
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-1.5 text-gray-700">
-                      <i className="fas fa-map-marker-alt text-teal-500 text-xs w-3"></i>
-                      <span className="text-xs">{vendor.city}, {vendor.state}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-gray-700">
-                      <i className="fas fa-file-invoice text-teal-500 text-xs w-3"></i>
-                      <span className="text-xs font-mono">{vendor.gst || 'N/A'}</span>
-                    </div>
-                  </div>
-                </td>
-                <td className="p-3 border-b border-gray-200 text-gray-800 text-sm">
-                  <div className="flex flex-col gap-1.5">
-                    {vendorTypes.map((type, idx) => (
-                      <VendorTypeBadge key={idx} type={type} />
-                    ))}
-                  </div>
-                </td>
-                <td className="p-3 border-b border-gray-200 text-gray-800 text-sm">
-                  <span className={`py-1.5 px-3 rounded text-xs font-bold uppercase tracking-wider inline-block ${
-                    vendor.status === VENDOR_STATUS.ACTIVE ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
-                  }`}>
-                    {vendor.status}
-                  </span>
-                </td>
-                <td className="p-2.5 border-b border-gray-200 text-gray-800 text-sm text-left whitespace-nowrap">
-                  <div className="flex gap-1.5">
-                    <button
-                      onClick={() => handleViewVendor(vendor)}
-                      className="w-8 h-8 border-none rounded-md cursor-pointer text-xs font-semibold transition-all inline-flex items-center justify-center bg-blue-500 text-white shadow-sm hover:-translate-y-px hover:shadow-md"
-                      title="View Details"
-                    >
-                      <i className="fas fa-eye text-xs"></i>
-                    </button>
-                    <button
-                      onClick={() => handleEditVendor(vendor)}
-                      className="w-8 h-8 border-none rounded-md cursor-pointer text-xs font-semibold transition-all inline-flex items-center justify-center bg-amber-500 text-white shadow-sm hover:-translate-y-px hover:shadow-md"
-                      title="Edit Vendor"
-                    >
-                      <i className="fas fa-edit text-xs"></i>
-                    </button>
-                    <button
-                      onClick={() => handleDeleteVendor(vendor.id)}
-                      className="w-8 h-8 border-none rounded-md cursor-pointer text-xs font-semibold transition-all inline-flex items-center justify-center bg-red-500 text-white shadow-sm hover:-translate-y-px hover:shadow-md"
-                      title="Delete Vendor"
-                    >
-                      <i className="fas fa-trash text-xs"></i>
-                    </button>
-                  </div>
-                </td>
+                </th>
+                <th className="p-3 text-left border-b border-gray-200 font-bold text-gray-600 text-xs uppercase tracking-wider bg-gray-50 w-16">ID</th>
+                <th className="p-3 text-left border-b border-gray-200 font-bold text-gray-600 text-xs uppercase tracking-wider bg-gray-50">Vendor Details</th>
+                <th className="p-3 text-left border-b border-gray-200 font-bold text-gray-600 text-xs uppercase tracking-wider bg-gray-50">Contact Info</th>
+                <th className="p-3 text-left border-b border-gray-200 font-bold text-gray-600 text-xs uppercase tracking-wider bg-gray-50">Location & GST</th>
+                <th className="p-3 text-left border-b border-gray-200 font-bold text-gray-600 text-xs uppercase tracking-wider bg-gray-50">Type of Vendor</th>
+                <th className="p-3 text-left border-b border-gray-200 font-bold text-gray-600 text-xs uppercase tracking-wider bg-gray-50 w-24">Status</th>
+                <th className="p-3 text-left border-b border-gray-200 font-bold text-gray-600 text-xs uppercase tracking-wider bg-gray-50 w-32">Actions</th>
               </tr>
-            );
-          })
-        ) : (
-          <tr>
-            <td colSpan="8" className="text-center p-10 text-gray-500">
-              <i className="fas fa-inbox text-4xl text-teal-500 mb-3 block"></i>
-              No vendors found
-            </td>
-          </tr>
-        )}
-      </tbody>
-    </table>
-  </div>
-</div>
-
+            </thead>
+            <tbody>
+              {filteredVendors.length > 0 ? (
+                filteredVendors.map((vendor) => {
+                  const vendorTypes = Array.isArray(vendor.vendorType) ? vendor.vendorType : [vendor.vendorType];
+                  return (
+                    <tr key={vendor.id} className="transition-all hover:bg-cyan-50">
+                      <td className="p-3 border-b border-gray-200 text-gray-800 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={selectedVendors.includes(vendor.id)}
+                          onChange={() => handleSelectVendor(vendor.id)}
+                          className="w-4 h-4 cursor-pointer accent-teal-500"
+                        />
+                      </td>
+                      <td className="p-3 border-b border-gray-200 text-gray-800 text-sm">
+                        <div className="font-bold text-gray-700">#{vendor.id}</div>
+                      </td>
+                      <td className="p-3 border-b border-gray-200 text-gray-800 text-sm">
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+                            style={{ backgroundColor: vendor.avatarColor }}
+                          >
+                            {vendor.avatar}
+                          </div>
+                          <div>
+                            <div className="font-bold text-gray-800">{vendor.companyName}</div>
+                            <div className="text-xs text-gray-500">ID: {vendor.id}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-3 border-b border-gray-200 text-gray-800 text-sm">
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-1.5 text-gray-700">
+                            <i className="fas fa-phone text-teal-500 text-xs w-3"></i>
+                            <span className="text-xs">{vendor.contact}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-gray-700">
+                            <i className="fas fa-envelope text-teal-500 text-xs w-3"></i>
+                            <span className="text-xs">{vendor.email}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-3 border-b border-gray-200 text-gray-800 text-sm">
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-1.5 text-gray-700">
+                            <i className="fas fa-map-marker-alt text-teal-500 text-xs w-3"></i>
+                            <span className="text-xs">{vendor.city}, {vendor.state}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-gray-700">
+                            <i className="fas fa-file-invoice text-teal-500 text-xs w-3"></i>
+                            <span className="text-xs font-mono">{vendor.gst || 'N/A'}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-3 border-b border-gray-200 text-gray-800 text-sm">
+                        <div className="flex flex-col gap-1.5">
+                          {vendorTypes.map((type, idx) => (
+                            <VendorTypeBadge key={idx} type={type} />
+                          ))}
+                        </div>
+                      </td>
+                      <td className="p-3 border-b border-gray-200 text-gray-800 text-sm">
+                        <span className={`py-1.5 px-3 rounded text-xs font-bold uppercase tracking-wider inline-block ${
+                          vendor.status === VENDOR_STATUS.ACTIVE ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
+                        }`}>
+                          {vendor.status}
+                        </span>
+                      </td>
+                      <td className="p-2.5 border-b border-gray-200 text-gray-800 text-sm text-left whitespace-nowrap">
+                        <div className="flex gap-1.5">
+                          <button
+                            onClick={() => handleViewVendor(vendor)}
+                            className="w-8 h-8 border-none rounded-md cursor-pointer text-xs font-semibold transition-all inline-flex items-center justify-center bg-blue-500 text-white shadow-sm hover:-translate-y-px hover:shadow-md"
+                            title="View Details"
+                          >
+                            <i className="fas fa-eye text-xs"></i>
+                          </button>
+                          <button
+                            onClick={() => handleEditVendor(vendor)}
+                            className="w-8 h-8 border-none rounded-md cursor-pointer text-xs font-semibold transition-all inline-flex items-center justify-center bg-amber-500 text-white shadow-sm hover:-translate-y-px hover:shadow-md"
+                            title="Edit Vendor"
+                          >
+                            <i className="fas fa-edit text-xs"></i>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteVendor(vendor.id)}
+                            className="w-8 h-8 border-none rounded-md cursor-pointer text-xs font-semibold transition-all inline-flex items-center justify-center bg-red-500 text-white shadow-sm hover:-translate-y-px hover:shadow-md"
+                            title="Delete Vendor"
+                          >
+                            <i className="fas fa-trash text-xs"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan="8" className="text-center p-10 text-gray-500">
+                    <i className="fas fa-inbox text-4xl text-teal-500 mb-3 block"></i>
+                    No vendors found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       {/* Modals */}
       <VendorModal
