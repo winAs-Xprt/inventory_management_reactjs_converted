@@ -102,15 +102,13 @@ export const RACK_CONFIG = {
   wardrobe1: {
     name: 'Wardrobe 1',
     prefix: 'W1',
-    columns: 5,
-    rows: 4,
+ 
     cells: []
   },
   wardrobe2: {
     name: 'Wardrobe 2',
     prefix: 'W2',
-    columns: 5,
-    rows: 4,
+
     cells: []
   }
 };

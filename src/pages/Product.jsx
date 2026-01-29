@@ -99,6 +99,263 @@ const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, type = 'war
 };
 
 // ==========================================================================
+// PRODUCT DETAIL VIEW MODAL COMPONENT
+// ==========================================================================
+const ProductDetailModal = ({ isOpen, onClose, product, categories, vendors }) => {
+  if (!isOpen || !product) return null;
+
+  const categoryName = getCategoryName(categories, product.categoryId);
+  const vendorDetails = product.vendorIds.map(vId => vendors.find(v => v.id === vId)).filter(Boolean);
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-[9999] p-5">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose}></div>
+      <div className="relative w-full max-w-5xl max-h-[90vh] animate-in fade-in duration-300">
+        <div className="bg-white rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+          
+          {/* Modal Header */}
+          <div className="px-6 py-5 border-b-2 border-gray-200 flex justify-between items-center bg-gradient-to-r from-teal-50 to-cyan-50">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-xl overflow-hidden border-2 border-teal-500 shadow-md">
+                <img
+                  src={product.productImage}
+                  alt={product.productName}
+                  className="w-full h-full object-cover"
+                  onError={(e) => e.target.src = 'https://via.placeholder.com/80?text=Product'}
+                />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-800">{product.productName}</h2>
+                <p className="text-sm text-gray-600 flex items-center gap-2 mt-1">
+                  <span className="bg-cyan-100 text-teal-600 px-2 py-0.5 rounded text-xs font-semibold">{categoryName}</span>
+                  <span className="text-gray-400">•</span>
+                  <code className="bg-gray-100 px-2 py-0.5 rounded text-xs font-mono">{product.productCode}</code>
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="bg-transparent border-none text-gray-500 text-2xl cursor-pointer p-2 rounded-md w-10 h-10 flex items-center justify-center hover:bg-white hover:text-gray-800 transition-all duration-200"
+            >
+              <i className="fas fa-times"></i>
+            </button>
+          </div>
+
+          {/* Modal Body */}
+          <div className="p-6 overflow-y-auto flex-1">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              
+              {/* Column 1: Product Image & Basic Info */}
+              <div className="lg:col-span-1">
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                  <img
+                    src={product.productImage}
+                    alt={product.productName}
+                    className="w-full h-64 object-cover rounded-lg mb-4 border border-gray-200"
+                    onError={(e) => e.target.src = 'https://via.placeholder.com/300?text=No+Image'}
+                  />
+                  
+                  {/* Status Badge */}
+                  <div className="text-center mb-4">
+                    <span className={`py-2 px-4 rounded-lg text-sm font-bold uppercase inline-block ${
+                      product.status === 'normal' ? 'bg-green-100 text-green-700' :
+                      product.status === 'low' ? 'bg-yellow-100 text-yellow-700' :
+                      product.status === 'critical' ? 'bg-orange-100 text-orange-700' :
+                      'bg-red-100 text-red-700'
+                    }`}>
+                      <i className="fas fa-circle text-xs mr-1"></i>
+                      {product.status}
+                    </span>
+                  </div>
+
+                  {/* Quick Stats */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-white p-3 rounded-lg border border-gray-200 text-center">
+                      <div className="text-2xl font-bold text-teal-600">{product.currentQuantity}</div>
+                      <div className="text-xs text-gray-600 mt-1">Current Stock</div>
+                    </div>
+                    <div className="bg-white p-3 rounded-lg border border-gray-200 text-center">
+                      <div className="text-2xl font-bold text-orange-600">{product.minQuantityThreshold}</div>
+                      <div className="text-xs text-gray-600 mt-1">Min Threshold</div>
+                    </div>
+                    <div className="bg-white p-3 rounded-lg border border-gray-200 text-center">
+                      <div className="text-2xl font-bold text-blue-600">{product.reorderQuantity}</div>
+                      <div className="text-xs text-gray-600 mt-1">Reorder Qty</div>
+                    </div>
+                    <div className="bg-white p-3 rounded-lg border border-gray-200 text-center">
+                      <div className="text-2xl font-bold text-purple-600">{product.unitOfMeasurement}</div>
+                      <div className="text-xs text-gray-600 mt-1">Unit</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Column 2 & 3: Detailed Information */}
+              <div className="lg:col-span-2 space-y-6">
+                
+                {/* Product Information */}
+                <div className="bg-white rounded-xl border border-gray-200 p-5">
+                  <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i className="fas fa-info-circle text-teal-500"></i>
+                    Product Information
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 block mb-1">Product Name</label>
+                      <p className="text-sm text-gray-800 font-medium">{product.productName}</p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 block mb-1">Brand</label>
+                      <p className="text-sm text-gray-800 font-medium">{product.brand || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 block mb-1">SKU / Product Code</label>
+                      <p className="text-sm"><code className="bg-gray-100 px-2 py-1 rounded font-mono text-xs">{product.productCode}</code></p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 block mb-1">Category</label>
+                      <p className="text-sm"><span className="bg-cyan-50 text-teal-600 px-2 py-1 rounded text-xs font-semibold border border-cyan-200">{categoryName}</span></p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 block mb-1">Rack Location</label>
+                      <p className="text-sm"><span className="bg-blue-50 text-blue-600 px-2 py-1 rounded text-xs font-bold"><i className="fas fa-map-marker-alt mr-1"></i>{product.rackLocation}</span></p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-gray-600 block mb-1">Last Updated</label>
+                      <p className="text-sm text-gray-800"><i className="fas fa-clock text-gray-400 mr-1"></i>{product.updated_At}</p>
+                    </div>
+                  </div>
+
+                  {product.description && (
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <label className="text-xs font-semibold text-gray-600 block mb-2">Description</label>
+                      <p className="text-sm text-gray-700 leading-relaxed">{product.description}</p>
+                    </div>
+                  )}
+
+                  {product.useCase && (
+                    <div className="mt-4">
+                      <label className="text-xs font-semibold text-gray-600 block mb-2">Use Case</label>
+                      <p className="text-sm text-gray-700">{product.useCase}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Vendor & Pricing Information */}
+                <div className="bg-white rounded-xl border border-gray-200 p-5">
+                  <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <i className="fas fa-store text-teal-500"></i>
+                    Vendor & Pricing
+                  </h3>
+                  <div className="space-y-3">
+                    {vendorDetails.map(vendor => (
+                      <div key={vendor.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                        <div>
+                          <p className="font-semibold text-gray-800">{vendor.vendorName}</p>
+                          <p className="text-xs text-gray-600">{vendor.contact} • {vendor.email}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xl font-bold text-teal-600">₹{product.vendorPrices[vendor.id]?.toLocaleString('en-IN')}</p>
+                          <p className="text-xs text-gray-600">Purchase Price</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Advanced Features */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Auto PO */}
+                  <div className={`rounded-xl border p-4 ${product.autoPOEnabled ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200'}`}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <i className={`fas fa-robot text-lg ${product.autoPOEnabled ? 'text-blue-600' : 'text-gray-400'}`}></i>
+                      <h4 className="font-bold text-sm text-gray-800">Auto PO</h4>
+                    </div>
+                    {product.autoPOEnabled ? (
+                      <div>
+                        <p className="text-xs text-gray-600 mb-1">Enabled</p>
+                        <p className="text-sm font-semibold text-blue-600">Qty: {product.autoPOQuantity}</p>
+                        {product.autoPOVendor && (
+                          <p className="text-xs text-gray-600 mt-1">Vendor: {vendors.find(v => v.id === product.autoPOVendor)?.vendorName}</p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-500">Disabled</p>
+                    )}
+                  </div>
+
+                  {/* Scrap Management */}
+                  <div className={`rounded-xl border p-4 ${product.isScrap ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'}`}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <i className={`fas fa-recycle text-lg ${product.isScrap ? 'text-red-600' : 'text-gray-400'}`}></i>
+                      <h4 className="font-bold text-sm text-gray-800">Scrap</h4>
+                    </div>
+                    {product.isScrap ? (
+                      <div>
+                        <p className="text-xs text-gray-600 mb-1">Enabled</p>
+                        <p className="text-sm font-semibold text-red-600">Qty: {product.scrapQuantity}</p>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-500">Disabled</p>
+                    )}
+                  </div>
+
+                  {/* Maintenance */}
+                  <div className={`rounded-xl border p-4 ${product.maintenanceEnabled ? 'bg-purple-50 border-purple-200' : 'bg-gray-50 border-gray-200'}`}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <i className={`fas fa-tools text-lg ${product.maintenanceEnabled ? 'text-purple-600' : 'text-gray-400'}`}></i>
+                      <h4 className="font-bold text-sm text-gray-800">Maintenance</h4>
+                    </div>
+                    {product.maintenanceEnabled ? (
+                      <div>
+                        <p className="text-xs text-gray-600 mb-1">Enabled</p>
+                        <p className="text-sm font-semibold text-purple-600">Qty: {product.maintenanceQuantity}</p>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-500">Disabled</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Expiry Date */}
+                {product.expiryDate && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                    <h4 className="font-bold text-sm text-gray-800 mb-2 flex items-center gap-2">
+                      <i className="fas fa-calendar-times text-yellow-600"></i>
+                      Expiry Information
+                    </h4>
+                    <p className="text-sm text-gray-700">Expiry Date: <strong>{product.expiryDate}</strong></p>
+                  </div>
+                )}
+
+              </div>
+            </div>
+          </div>
+
+          {/* Modal Footer */}
+          <div className="flex gap-3 px-6 py-5 border-t-2 border-gray-200 bg-gray-50">
+            <button
+              onClick={onClose}
+              className="flex-1 px-5 py-3 bg-gray-100 text-gray-700 border border-gray-300 rounded-md text-sm font-semibold cursor-pointer hover:bg-white transition-all duration-200 flex items-center justify-center gap-2"
+            >
+              <i className="fas fa-times"></i>
+              Close
+            </button>
+            <button
+              onClick={() => window.print()}
+              className="flex-1 px-5 py-3 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-md text-sm font-semibold cursor-pointer hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+            >
+              <i className="fas fa-print"></i>
+              Print Details
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ==========================================================================
 // STATISTICS CARD COMPONENT
 // ==========================================================================
 const StatCard = ({ icon, title, value, change, changeType }) => {
@@ -181,7 +438,6 @@ const ProductImageUpload = ({ imageUrl, onImageChange, onImageRemove }) => {
         <i className="fas fa-image text-teal-500 mr-1.5"></i>
         Product Image
       </label>
-
       {!imageUrl ? (
         <div
           className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all ${
@@ -1088,6 +1344,10 @@ const Product = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [editingCategory, setEditingCategory] = useState(null);
 
+  // NEW: Add these states for View Modal
+  const [viewingProduct, setViewingProduct] = useState(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+
   // Filters
   const [filters, setFilters] = useState({
     search: '',
@@ -1271,6 +1531,18 @@ const Product = () => {
         }}
         category={editingCategory}
         onSave={handleSaveCategory}
+      />
+
+      {/* NEW: Product Detail View Modal */}
+      <ProductDetailModal
+        isOpen={isViewModalOpen}
+        onClose={() => {
+          setIsViewModalOpen(false);
+          setViewingProduct(null);
+        }}
+        product={viewingProduct}
+        categories={categories}
+        vendors={vendors}
       />
 
       {/* Page Header */}
@@ -1589,8 +1861,12 @@ const Product = () => {
                       </td>
                       <td className="p-3">
                         <div className="flex gap-1.5">
+                          {/* UPDATED: View button now opens modal */}
                           <button
-                            onClick={() => showToast('View feature coming soon', 'info')}
+                            onClick={() => {
+                              setViewingProduct(product);
+                              setIsViewModalOpen(true);
+                            }}
                             className="w-8 h-8 bg-blue-500 text-white rounded-md text-xs hover:-translate-y-px hover:shadow-md transition-all flex items-center justify-center"
                             title="View Details"
                           >
