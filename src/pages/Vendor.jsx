@@ -155,15 +155,15 @@ const VendorTypeBadge = ({ type }) => {
 };
 
 // ==========================================================================
-// VENDOR MODAL COMPONENT - UPDATED WITH ALL NEW FEATURES
+// VENDOR MODAL COMPONENT
 // ==========================================================================
 const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
   const [formData, setFormData] = useState({
     vendorName: '',
     companyName: '',
     contact: '',
-    whatsappSameAsPhone: true, // NEW FIELD
-    whatsappNumber: '', // NEW FIELD
+    whatsappSameAsPhone: true,
+    whatsappNumber: '',
     email: '',
     address: '',
     pincode: '',
@@ -182,7 +182,6 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
 
   useEffect(() => {
     if (vendor) {
-      // EDITING MODE
       const contactNumber = vendor.contact.replace('+91 ', '').replace(/\s/g, '');
       const vendorTypes = Array.isArray(vendor.vendorType) ? vendor.vendorType : [vendor.vendorType];
 
@@ -206,7 +205,6 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
         }
       });
     } else {
-      // CREATE MODE - Default to Active
       setFormData({
         vendorName: '',
         companyName: '',
@@ -219,7 +217,7 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
         city: '',
         state: '',
         gst: '',
-        status: VENDOR_STATUS.ACTIVE, // Always active for new vendors
+        status: VENDOR_STATUS.ACTIVE,
         vendorTypes: {
           purchaseVendor: false,
           maintenancePartner: false,
@@ -233,7 +231,6 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Validate vendor type selection
     const selectedTypes = [];
     if (formData.vendorTypes.purchaseVendor) selectedTypes.push(VENDOR_TYPES.PURCHASE);
     if (formData.vendorTypes.maintenancePartner) selectedTypes.push(VENDOR_TYPES.MAINTENANCE);
@@ -246,7 +243,6 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
 
     setVendorTypeError(false);
     
-    // Prepare final WhatsApp number
     const finalWhatsappNumber = formData.whatsappSameAsPhone ? formData.contact : formData.whatsappNumber;
     
     onSave({ 
@@ -265,7 +261,6 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
       <div className="relative w-full max-w-2xl max-h-[90vh] animate-in fade-in duration-300">
         <div className="bg-white rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-          {/* Header */}
           <div className="px-6 py-5 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-teal-50 to-cyan-50">
             <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
               <i className={`fas ${isEditMode ? 'fa-edit' : 'fa-plus-circle'} text-teal-500`}></i>
@@ -279,11 +274,10 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
             </button>
           </div>
 
-          {/* Body */}
           <div className="p-6 overflow-y-auto flex-1">
             <form onSubmit={handleSubmit} id="vendorForm">
               
-              {/* Vendor Name & Company Name - REQUIRED */}
+              {/* Vendor Name & Company Name */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
@@ -326,7 +320,7 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
                 </div>
               </div>
 
-              {/* Vendor Type Selection - REQUIRED */}
+              {/* Vendor Type Selection */}
               <div className="flex flex-col gap-1.5 mb-4">
                 <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
                   <i className="fas fa-tags text-teal-500"></i>
@@ -391,7 +385,7 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
                 )}
               </div>
 
-              {/* Contact Number with WhatsApp Checkbox - OPTIONAL */}
+              {/* Contact Number with WhatsApp Checkbox */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
@@ -413,7 +407,6 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
                     />
                   </div>
                   
-                  {/* WhatsApp Checkbox - NEW FEATURE */}
                   <label className="flex items-center gap-2 mt-2 p-2.5 bg-green-50 rounded-md border border-green-200 cursor-pointer hover:bg-green-100 transition-all">
                     <input
                       type="checkbox"
@@ -432,7 +425,6 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
                   </small>
                 </div>
 
-                {/* Separate WhatsApp Number Field (shown only if checkbox is unchecked) */}
                 {!formData.whatsappSameAsPhone && (
                   <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
@@ -459,7 +451,6 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
                   </div>
                 )}
 
-                {/* Email - OPTIONAL */}
                 {formData.whatsappSameAsPhone && (
                   <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
@@ -481,7 +472,6 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
                 )}
               </div>
 
-              {/* Email (if WhatsApp is separate) - OPTIONAL */}
               {!formData.whatsappSameAsPhone && (
                 <div className="flex flex-col gap-1.5 mb-4">
                   <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
@@ -502,7 +492,7 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
                 </div>
               )}
 
-              {/* Address - OPTIONAL */}
+              {/* Address */}
               <div className="flex flex-col gap-1.5 mb-4">
                 <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
                   <i className="fas fa-map-marker-alt text-teal-500"></i>
@@ -521,7 +511,7 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
                 </small>
               </div>
 
-              {/* Pincode, City, State - OPTIONAL */}
+              {/* Pincode, City, State */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
@@ -589,7 +579,6 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
 
               {/* GST & Status */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                {/* GST - OPTIONAL */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
                     <i className="fas fa-file-invoice text-teal-500"></i>
@@ -611,7 +600,6 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
                   </small>
                 </div>
 
-                {/* Status - ONLY SHOW WHEN EDITING */}
                 {isEditMode && (
                   <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
@@ -633,7 +621,6 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
                   </div>
                 )}
 
-                {/* When creating new vendor, show info message instead */}
                 {!isEditMode && (
                   <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
@@ -654,7 +641,6 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
             </form>
           </div>
 
-          {/* Footer */}
           <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-2.5 bg-gray-50">
             <button
               onClick={onClose}
@@ -820,6 +806,88 @@ const ViewVendorModal = ({ isOpen, onClose, vendor }) => {
 };
 
 // ==========================================================================
+// PAGINATION COMPONENT
+// ==========================================================================
+const Pagination = ({ currentPage, totalPages, onPageChange }) => {
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisible = 5;
+
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        pages.push(1, 2, 3, 4, '...', totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+      }
+    }
+
+    return pages;
+  };
+
+  return (
+    <div className="flex items-center justify-between px-5 py-4 border-t border-gray-200 bg-gray-50">
+      <div className="text-sm text-gray-600 font-medium">
+        Page <span className="font-bold text-teal-600">{currentPage}</span> of <span className="font-bold">{totalPages}</span>
+      </div>
+      
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className={`px-3 py-2 border-2 rounded-md text-sm font-semibold transition-all duration-200 flex items-center gap-1 ${
+            currentPage === 1
+              ? 'border-gray-200 text-gray-400 cursor-not-allowed'
+              : 'border-gray-200 text-gray-700 hover:border-teal-400 hover:text-teal-600 cursor-pointer'
+          }`}
+        >
+          <i className="fas fa-chevron-left text-xs"></i>
+          Previous
+        </button>
+
+        <div className="flex items-center gap-1">
+          {getPageNumbers().map((page, index) => (
+            page === '...' ? (
+              <span key={`ellipsis-${index}`} className="px-3 py-2 text-gray-400">...</span>
+            ) : (
+              <button
+                key={page}
+                onClick={() => onPageChange(page)}
+                className={`w-10 h-10 border-2 rounded-md text-sm font-bold transition-all duration-200 ${
+                  currentPage === page
+                    ? 'bg-gradient-to-br from-teal-400 to-teal-700 text-white border-teal-500 shadow-md'
+                    : 'border-gray-200 text-gray-700 hover:border-teal-400 hover:text-teal-600 hover:bg-cyan-50'
+                }`}
+              >
+                {page}
+              </button>
+            )
+          ))}
+        </div>
+
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className={`px-3 py-2 border-2 rounded-md text-sm font-semibold transition-all duration-200 flex items-center gap-1 ${
+            currentPage === totalPages
+              ? 'border-gray-200 text-gray-400 cursor-not-allowed'
+              : 'border-gray-200 text-gray-700 hover:border-teal-400 hover:text-teal-600 cursor-pointer'
+          }`}
+        >
+          Next
+          <i className="fas fa-chevron-right text-xs"></i>
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// ==========================================================================
 // MAIN VENDOR MANAGEMENT COMPONENT
 // ==========================================================================
 const Vendor = () => {
@@ -839,6 +907,10 @@ const Vendor = () => {
 
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
+  // PAGINATION STATE
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+
   useEffect(() => {
     setVendors(DUMMY_VENDORS);
   }, []);
@@ -851,11 +923,36 @@ const Vendor = () => {
     return getFilteredVendors(vendors, { searchValue, filterStatus, filterType });
   }, [vendors, searchValue, filterStatus, filterType]);
 
+  // PAGINATION CALCULATIONS
+  const totalPages = Math.ceil(filteredVendors.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentVendors = filteredVendors.slice(indexOfFirstItem, indexOfLastItem);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchValue, filterStatus, filterType]);
+
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
     setTimeout(() => {
       setToast({ show: false, message: '', type: 'success' });
     }, 3000);
+  };
+
+  const applyFilters = () => {
+    console.log('Applying filters:', { searchValue, filterStatus, filterType });
+    showToast('Filters applied successfully', 'info');
+    setCurrentPage(1);
+  };
+
+  const clearFilters = () => {
+    setSearchValue('');
+    setFilterStatus('');
+    setFilterType('');
+    setCurrentPage(1);
+    showToast('Filters cleared', 'info');
   };
 
   const handleRefresh = () => {
@@ -872,6 +969,7 @@ const Vendor = () => {
       setFilterStatus('');
       setFilterType('');
       setSelectedVendors([]);
+      setCurrentPage(1);
       
       if (refreshButton) {
         refreshButton.classList.remove('fa-spin');
@@ -923,7 +1021,6 @@ const Vendor = () => {
 
   const handleSaveVendor = (formData) => {
     if (editingVendor) {
-      // Edit existing vendor
       const updatedVendor = {
         ...editingVendor,
         vendorName: formData.vendorName,
@@ -944,7 +1041,6 @@ const Vendor = () => {
       setVendors(vendors.map(v => v.id === editingVendor.id ? updatedVendor : v));
       showToast('Vendor updated successfully', 'success');
     } else {
-      // Add new vendor - Always set to Active
       const avatarData = generateVendorAvatar(formData.companyName);
       const newVendor = {
         id: Date.now(),
@@ -959,7 +1055,7 @@ const Vendor = () => {
         city: formData.city,
         state: formData.state,
         gst: formData.gst,
-        status: VENDOR_STATUS.ACTIVE, // Always Active for new vendors
+        status: VENDOR_STATUS.ACTIVE,
         vendorType: formData.vendorTypes,
         lastOrderDate: new Date().toISOString().split('T')[0],
         totalOrders: 0,
@@ -977,7 +1073,7 @@ const Vendor = () => {
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      setSelectedVendors(filteredVendors.map(v => v.id));
+      setSelectedVendors(currentVendors.map(v => v.id));
     } else {
       setSelectedVendors([]);
     }
@@ -989,10 +1085,10 @@ const Vendor = () => {
     );
   };
 
-  const clearFilters = () => {
-    setSearchValue('');
-    setFilterStatus('');
-    setFilterType('');
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    setSelectedVendors([]);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -1058,57 +1154,75 @@ const Vendor = () => {
       </div>
 
       {/* Filters */}
-      <div className="mb-6">
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-          <div className="p-4 border-b-2 border-gray-200 bg-gray-50 flex justify-between items-center flex-wrap gap-3">
-            <div className="text-lg font-bold text-gray-800 flex items-center gap-2">
-              <i className="fas fa-filter text-teal-500 text-xl"></i>
-              Filters
-            </div>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
+        <h3 className="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
+          <i className="fas fa-filter text-teal-500"></i>
+          Filters
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {/* Search Input */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1.5">Search Vendors</label>
+            <input
+              type="text"
+              placeholder="Search vendors..."
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              className="w-full py-2 px-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all"
+            />
+          </div>
+
+          {/* Status Filter */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1.5">Status</label>
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="w-full py-2 px-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all cursor-pointer"
+            >
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+
+          {/* Vendor Type Filter */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1.5">Vendor Type</label>
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="w-full py-2 px-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all cursor-pointer"
+            >
+              <option value="">All Types</option>
+              <option value={VENDOR_TYPES.PURCHASE}>Purchase Vendor</option>
+              <option value={VENDOR_TYPES.MAINTENANCE}>Maintenance Partner</option>
+              <option value={VENDOR_TYPES.SCRAP}>Scrap Disposal Partner</option>
+            </select>
+          </div>
+
+          {/* Apply Button */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1.5">&nbsp;</label>
+            <button
+              onClick={applyFilters}
+              className="w-full px-4 py-2 bg-gradient-to-r from-teal-400 to-teal-700 text-white rounded-md text-sm font-semibold hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 flex items-center justify-center gap-2"
+            >
+              <i className="fas fa-filter"></i>
+              Apply
+            </button>
+          </div>
+
+          {/* Clear Button */}
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1.5">&nbsp;</label>
             <button
               onClick={clearFilters}
-              className="px-4 py-2 bg-gradient-to-br from-red-500 to-red-700 text-white border-none rounded-md text-sm font-semibold cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg flex items-center gap-2"
+              className="w-full px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-md text-sm font-semibold hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 flex items-center justify-center gap-2"
             >
               <i className="fas fa-times"></i>
               Clear
             </button>
-          </div>
-          <div className="p-5">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="relative">
-                <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                <input
-                  type="text"
-                  placeholder="Search vendors..."
-                  value={searchValue}
-                  onChange={(e) => setSearchValue(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 border-2 border-gray-200 rounded-md text-sm text-gray-800 outline-none transition-all focus:border-teal-400 focus:ring-4 focus:ring-cyan-100"
-                />
-              </div>
-              <div>
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  className="w-full p-2.5 border-2 border-gray-200 rounded-md text-sm text-gray-800 outline-none transition-all cursor-pointer focus:border-teal-400 focus:ring-4 focus:ring-cyan-100"
-                >
-                  <option value="">All Status</option>
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
-              </div>
-              <div>
-                <select
-                  value={filterType}
-                  onChange={(e) => setFilterType(e.target.value)}
-                  className="w-full p-2.5 border-2 border-gray-200 rounded-md text-sm text-gray-800 outline-none transition-all cursor-pointer focus:border-teal-400 focus:ring-4 focus:ring-cyan-100"
-                >
-                  <option value="">All Types</option>
-                  <option value={VENDOR_TYPES.PURCHASE}>Purchase Vendor</option>
-                  <option value={VENDOR_TYPES.MAINTENANCE}>Maintenance Partner</option>
-                  <option value={VENDOR_TYPES.SCRAP}>Scrap Disposal Partner</option>
-                </select>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -1146,15 +1260,15 @@ const Vendor = () => {
           </div>
         )}
 
-        <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+        <div className="overflow-x-auto">
           <table className="w-full border-collapse min-w-[1400px]">
-            <thead className="sticky top-0 z-10 bg-gray-50">
+            <thead className="bg-gray-50">
               <tr>
                 <th className="p-3 text-left border-b border-gray-200 font-bold text-gray-600 text-xs uppercase tracking-wider bg-gray-50 w-12">
                   <input
                     type="checkbox"
                     onChange={handleSelectAll}
-                    checked={selectedVendors.length === filteredVendors.length && filteredVendors.length > 0}
+                    checked={selectedVendors.length === currentVendors.length && currentVendors.length > 0}
                     className="w-4 h-4 cursor-pointer accent-teal-500"
                   />
                 </th>
@@ -1168,8 +1282,8 @@ const Vendor = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredVendors.length > 0 ? (
-                filteredVendors.map((vendor) => {
+              {currentVendors.length > 0 ? (
+                currentVendors.map((vendor) => {
                   const vendorTypes = Array.isArray(vendor.vendorType) ? vendor.vendorType : [vendor.vendorType];
                   return (
                     <tr key={vendor.id} className="transition-all hover:bg-cyan-50">
@@ -1194,7 +1308,7 @@ const Vendor = () => {
                           </div>
                           <div>
                             <div className="font-bold text-gray-800">{vendor.companyName}</div>
-                            <div className="text-xs text-gray-500">ID: {vendor.id}</div>
+                            <div className="text-xs text-gray-500">Contact: {vendor.vendorName}</div>
                           </div>
                         </div>
                       </td>
@@ -1275,6 +1389,15 @@ const Vendor = () => {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+        )}
       </div>
 
       {/* Modals */}
@@ -1310,7 +1433,6 @@ const Vendor = () => {
         isDanger={true}
       />
 
-      {/* Toast Notification */}
       <Toast show={toast.show} message={toast.message} type={toast.type} />
     </div>
   );
