@@ -30,14 +30,12 @@ const Purchase = () => {
   const [showGRNModal, setShowGRNModal] = useState(false);
   const [showRescheduleModal, setShowRescheduleModal] = useState(false);
   const [showReturnModal, setShowReturnModal] = useState(false);
-  const [showRatingModal, setShowRatingModal] = useState(false);
 
   // Current Item IDs
   const [editingPOId, setEditingPOId] = useState(null);
   const [currentViewingPOId, setCurrentViewingPOId] = useState(null);
   const [currentReschedulePOId, setCurrentReschedulePOId] = useState(null);
   const [currentReturnPOId, setCurrentReturnPOId] = useState(null);
-  const [currentRatingPOId, setCurrentRatingPOId] = useState(null);
 
   // Filters
   const [filters, setFilters] = useState({
@@ -57,7 +55,7 @@ const Purchase = () => {
   });
 
   const [productRows, setProductRows] = useState([
-    { id: 'row-1', productId: '', quantity: 0, unitPrice: 0 }
+    { id: 'row-1', productId: '', quantity: 0, unitPrice: 0, selectedVendors: [] }
   ]);
 
   const [productSearchTerms, setProductSearchTerms] = useState({});
@@ -190,7 +188,7 @@ const Purchase = () => {
       expectedDeliveryDate: '',
       remarks: ''
     });
-    setProductRows([{ id: 'row-1', productId: '', quantity: 0, unitPrice: 0 }]);
+    setProductRows([{ id: 'row-1', productId: '', quantity: 0, unitPrice: 0, selectedVendors: [] }]);
     setProductSearchTerms({});
     setShowProductSuggestions({});
     setShowCreatePOModal(true);
@@ -201,13 +199,18 @@ const Purchase = () => {
       id: `row-${Date.now()}`,
       productId: '',
       quantity: 0,
-      unitPrice: 0
+      unitPrice: 0,
+      selectedVendors: []
     }]);
   };
 
   const handleRemoveProductRow = (rowId) => {
     if (productRows.length > 1) {
       setProductRows(productRows.filter(row => row.id !== rowId));
+      const { [rowId]: _, ...remainingTerms } = productSearchTerms;
+      const { [rowId]: __, ...remainingSuggestions } = showProductSuggestions;
+      setProductSearchTerms(remainingTerms);
+      setShowProductSuggestions(remainingSuggestions);
     }
   };
 
@@ -218,13 +221,19 @@ const Purchase = () => {
 
   const handleSelectProduct = (rowId, product) => {
     setProductRows(productRows.map(row => 
-      row.id === rowId ? { ...row, productId: product.id, unitPrice: product.unitPrice } : row
+      row.id === rowId ? { 
+        ...row, 
+        productId: product.id, 
+        unitPrice: product.unitPrice,
+        selectedVendors: []
+      } : row
     ));
     setProductSearchTerms({ ...productSearchTerms, [rowId]: product.productName });
     setShowProductSuggestions({ ...showProductSuggestions, [rowId]: false });
   };
 
-  const getFilteredProducts = (term) => {
+  const getFilteredProducts = (rowId) => {
+    const term = productSearchTerms[rowId];
     if (!term) return [];
     return PurchaseData.searchProducts(term).slice(0, 5);
   };
@@ -234,7 +243,7 @@ const Purchase = () => {
   };
 
   const handleCreatePO = () => {
-    if (!poForm.expectedDeliveryDate) {
+    if (!poForm.expectedDeliveryDate || !poForm.remarks) {
       showToast('Please fill all required fields', 'error');
       return;
     }
@@ -245,12 +254,19 @@ const Purchase = () => {
       return;
     }
 
-    const vendor = vendors.find(v => v.id === poForm.vendorId);
+    const productsWithoutVendors = validProducts.filter(row => 
+      !row.selectedVendors || row.selectedVendors.length === 0
+    );
+    if (productsWithoutVendors.length > 0) {
+      showToast('Please select at least one vendor for each product', 'error');
+      return;
+    }
+
     const newPO = {
       id: `PO-${poCounter}`,
       poNumber: `PO-${poCounter}`,
-      vendorId: poForm.vendorId || 'V001',
-      vendorName: vendor?.vendorName || 'Default Vendor',
+      vendorId: validProducts[0].selectedVendors[0],
+      vendorName: PurchaseData.getVendorById(validProducts[0].selectedVendors[0])?.vendorName || '',
       purchaseDate: poForm.purchaseDate,
       expectedDeliveryDate: poForm.expectedDeliveryDate,
       products: validProducts.map(row => {
@@ -259,7 +275,8 @@ const Purchase = () => {
           productId: row.productId,
           productName: product?.productName || '',
           orderedQty: row.quantity,
-          unitPrice: row.unitPrice
+          unitPrice: row.unitPrice,
+          selectedVendors: row.selectedVendors
         };
       }),
       purchasePrice: calculateOrderTotal(),
@@ -295,13 +312,21 @@ const Purchase = () => {
       id: `row-${idx}`,
       productId: p.productId,
       quantity: p.orderedQty,
-      unitPrice: p.unitPrice
+      unitPrice: p.unitPrice,
+      selectedVendors: p.selectedVendors || []
     })));
+
+    if (poRatings[po.id]) {
+      setTempRating(poRatings[po.id]);
+    } else {
+      setTempRating({ quality: 0, delivery: 0, price: 0, comments: '' });
+    }
+
     setShowEditPOModal(true);
   };
 
   const handleUpdatePO = () => {
-    if (!poForm.expectedDeliveryDate) {
+    if (!poForm.expectedDeliveryDate || !poForm.remarks) {
       showToast('Please fill all required fields', 'error');
       return;
     }
@@ -312,13 +337,20 @@ const Purchase = () => {
       return;
     }
 
-    const vendor = vendors.find(v => v.id === poForm.vendorId);
+    const productsWithoutVendors = validProducts.filter(row => 
+      !row.selectedVendors || row.selectedVendors.length === 0
+    );
+    if (productsWithoutVendors.length > 0) {
+      showToast('Please select at least one vendor for each product', 'error');
+      return;
+    }
+
     setPurchaseOrders(purchaseOrders.map(po => {
       if (po.id === editingPOId) {
         return {
           ...po,
-          vendorId: poForm.vendorId,
-          vendorName: vendor?.vendorName || '',
+          vendorId: validProducts[0].selectedVendors[0],
+          vendorName: PurchaseData.getVendorById(validProducts[0].selectedVendors[0])?.vendorName || '',
           purchaseDate: poForm.purchaseDate,
           expectedDeliveryDate: poForm.expectedDeliveryDate,
           products: validProducts.map(row => {
@@ -327,7 +359,8 @@ const Purchase = () => {
               productId: row.productId,
               productName: product?.productName || '',
               orderedQty: row.quantity,
-              unitPrice: row.unitPrice
+              unitPrice: row.unitPrice,
+              selectedVendors: row.selectedVendors
             };
           }),
           purchasePrice: calculateOrderTotal(),
@@ -336,6 +369,10 @@ const Purchase = () => {
       }
       return po;
     }));
+
+    if (tempRating.quality > 0 || tempRating.delivery > 0 || tempRating.price > 0) {
+      setPoRatings({ ...poRatings, [editingPOId]: tempRating });
+    }
 
     showToast('Purchase Order updated successfully!', 'success');
     setShowEditPOModal(false);
@@ -353,6 +390,11 @@ const Purchase = () => {
   // ==================== VIEW PO ====================
   const handleViewPO = (po) => {
     setCurrentViewingPOId(po.id);
+    if (poRatings[po.id]) {
+      setTempRating(poRatings[po.id]);
+    } else {
+      setTempRating({ quality: 0, delivery: 0, price: 0, comments: '' });
+    }
     setShowViewPOModal(true);
   };
 
@@ -507,23 +549,6 @@ const Purchase = () => {
     setShowReturnModal(false);
   };
 
-  // ==================== RATING ====================
-  const handleOpenRating = (po) => {
-    setCurrentRatingPOId(po.id);
-    setTempRating(poRatings[po.id] || { quality: 0, delivery: 0, price: 0, comments: '' });
-    setShowRatingModal(true);
-  };
-
-  const handleSubmitRating = () => {
-    if (tempRating.quality === 0 || tempRating.delivery === 0 || tempRating.price === 0) {
-      showToast('Please provide all ratings', 'error');
-      return;
-    }
-    setPoRatings({ ...poRatings, [currentRatingPOId]: tempRating });
-    showToast('Rating submitted successfully!', 'success');
-    setShowRatingModal(false);
-  };
-
   // ==================== DRAFT ACTIONS ====================
   const handleConvertDraft = (draft) => {
     const vendor = vendors.find(v => v.id === draft.vendorId);
@@ -538,7 +563,8 @@ const Purchase = () => {
         productId: draft.productId,
         productName: draft.productName,
         orderedQty: draft.suggestedQuantity,
-        unitPrice: draft.unitPrice || 0
+        unitPrice: draft.unitPrice || 0,
+        selectedVendors: [draft.vendorId]
       }],
       purchasePrice: draft.suggestedQuantity * (draft.unitPrice || 0),
       status: 'pending',
@@ -622,7 +648,6 @@ const Purchase = () => {
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
-        {/* Total Purchase Orders */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:-translate-y-1 hover:shadow-lg transition-all duration-200">
           <div className="flex justify-between items-start mb-3">
             <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide flex items-center gap-2">
@@ -637,7 +662,6 @@ const Purchase = () => {
           </div>
         </div>
 
-        {/* Pending Approvals */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:-translate-y-1 hover:shadow-lg transition-all duration-200">
           <div className="flex justify-between items-start mb-3">
             <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide flex items-center gap-2">
@@ -652,7 +676,6 @@ const Purchase = () => {
           </div>
         </div>
 
-        {/* GRNs Generated */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:-translate-y-1 hover:shadow-lg transition-all duration-200">
           <div className="flex justify-between items-start mb-3">
             <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide flex items-center gap-2">
@@ -667,7 +690,6 @@ const Purchase = () => {
           </div>
         </div>
 
-        {/* Draft Orders */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:-translate-y-1 hover:shadow-lg transition-all duration-200">
           <div className="flex justify-between items-start mb-3">
             <div className="text-xs font-semibold text-gray-600 uppercase tracking-wide flex items-center gap-2">
@@ -898,13 +920,7 @@ const Purchase = () => {
                           >
                             <i className="fas fa-undo"></i>
                           </button>
-                          <button
-                            onClick={() => handleOpenRating(po)}
-                            className="px-2.5 py-1.5 bg-amber-100 text-amber-700 rounded text-xs font-semibold hover:bg-amber-200 transition-all"
-                            title="Rate Order"
-                          >
-                            <i className="fas fa-star"></i>
-                          </button>
+                          {/* RATING BUTTON REMOVED - Now accessible through View and Edit modals */}
                           <button
                             onClick={() => handleDeletePO(po)}
                             className="px-2.5 py-1.5 bg-red-100 text-red-700 rounded text-xs font-semibold hover:bg-red-200 transition-all"
@@ -971,7 +987,7 @@ const Purchase = () => {
             <table className="w-full">
               <thead className="bg-gray-100 border-b-2 border-gray-200">
                 <tr>
-                  {['Draft ID', 'Product', 'Vendor', 'Suggested Qty', 'Unit Price', 'Reason', 'Actions'].map((h, i) => (
+                  {['Draft ID', 'Product', 'Vendor', 'Suggested Qty', 'Unit Price', 'Total', 'Reason', 'Generated Date', 'Actions'].map((h, i) => (
                     <th key={i} className="px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider whitespace-nowrap">
                       {h}
                     </th>
@@ -981,26 +997,32 @@ const Purchase = () => {
               <tbody className="divide-y divide-gray-200">
                 {autoGeneratedPOs.map(draft => (
                   <tr key={draft.id} className="hover:bg-purple-50 transition-colors">
+                    <td className="px-4 py-3 text-sm font-bold text-purple-700">{draft.id}</td>
                     <td className="px-4 py-3">
-                      <span className="text-sm font-bold text-purple-700">{draft.id}</span>
+                      <div className="text-sm font-semibold text-gray-800">{draft.productName}</div>
+                      <div className="text-xs text-gray-500">{draft.productId}</div>
                     </td>
-                    <td className="px-4 py-3 text-sm font-semibold text-gray-800">{draft.productName}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{vendors.find(v => v.id === draft.vendorId)?.vendorName || 'Unknown'}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{draft.vendorName}</td>
                     <td className="px-4 py-3 text-sm font-semibold text-gray-700">{draft.suggestedQuantity}</td>
-                    <td className="px-4 py-3 text-sm font-bold text-gray-800">{formatCurrency(draft.unitPrice || 0)}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">{draft.reason}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{formatCurrency(draft.unitPrice)}</td>
+                    <td className="px-4 py-3 text-sm font-bold text-gray-800">{formatCurrency(draft.suggestedQuantity * draft.unitPrice)}</td>
                     <td className="px-4 py-3">
-                      <div className="flex gap-2">
+                      <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">{draft.reason}</span>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{formatDate(draft.generatedDate)}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-1">
                         <button
                           onClick={() => handleConvertDraft(draft)}
-                          className="px-3 py-1.5 bg-purple-100 text-purple-700 rounded text-xs font-semibold hover:bg-purple-200 transition-all"
+                          className="px-3 py-1.5 bg-green-100 text-green-700 rounded text-xs font-semibold hover:bg-green-200 transition-all"
+                          title="Convert to PO"
                         >
-                          <i className="fas fa-check mr-1"></i>
-                          Convert to PO
+                          <i className="fas fa-check mr-1"></i> Convert
                         </button>
                         <button
                           onClick={() => handleDeleteDraft(draft.id)}
-                          className="px-3 py-1.5 bg-red-100 text-red-700 rounded text-xs font-semibold hover:bg-red-200 transition-all"
+                          className="px-2.5 py-1.5 bg-red-100 text-red-700 rounded text-xs font-semibold hover:bg-red-200 transition-all"
+                          title="Delete Draft"
                         >
                           <i className="fas fa-trash"></i>
                         </button>
@@ -1014,9 +1036,8 @@ const Purchase = () => {
         </div>
       )}
 
-      {/* MODALS */}
+      {/* Purchase Modals Component */}
       <PurchaseModals
-        // Modal States
         showCreatePOModal={showCreatePOModal}
         setShowCreatePOModal={setShowCreatePOModal}
         showEditPOModal={showEditPOModal}
@@ -1029,10 +1050,6 @@ const Purchase = () => {
         setShowRescheduleModal={setShowRescheduleModal}
         showReturnModal={showReturnModal}
         setShowReturnModal={setShowReturnModal}
-        showRatingModal={showRatingModal}
-        setShowRatingModal={setShowRatingModal}
-
-        // Forms
         poForm={poForm}
         setPOForm={setPOForm}
         productRows={productRows}
@@ -1045,19 +1062,13 @@ const Purchase = () => {
         setReturnForm={setReturnForm}
         tempRating={tempRating}
         setTempRating={setTempRating}
-
-        // Product Search
         productSearchTerms={productSearchTerms}
         setProductSearchTerms={setProductSearchTerms}
         showProductSuggestions={showProductSuggestions}
         setShowProductSuggestions={setShowProductSuggestions}
-
-        // Data
         vendors={vendors}
         products={products}
         purchaseOrders={purchaseOrders}
-
-        // Handlers
         handleCreatePO={handleCreatePO}
         handleUpdatePO={handleUpdatePO}
         handleAddProductRow={handleAddProductRow}
@@ -1071,14 +1082,15 @@ const Purchase = () => {
         handleReschedulePO={handleReschedulePO}
         handleReturnProductChange={handleReturnProductChange}
         handleCreateReturn={handleCreateReturn}
-        handleSubmitRating={handleSubmitRating}
-        getCurrentViewingPO={getCurrentViewingPO}
         formatDate={formatDate}
         formatCurrency={formatCurrency}
         getStatusBadge={getStatusBadge}
+        getCurrentViewingPO={getCurrentViewingPO}
+        currentViewingPOId={currentViewingPOId}
         editingPOId={editingPOId}
+        poRatings={poRatings}
+        rescheduleHistory={rescheduleHistory}
       />
-
     </div>
   );
 };

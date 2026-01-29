@@ -1,5 +1,3 @@
-// src/data/PurchaseData.jsx
-
 const PurchaseData = {
 
   // ==================== SAMPLE DATA ====================
@@ -68,7 +66,7 @@ const PurchaseData = {
           productName: 'Laptop Dell Inspiron 15', 
           orderedQty: 10, 
           unitPrice: 45000,
-          selectedVendors: ['V001', 'V002'] // Multiple vendors selected
+          selectedVendors: ['V001', 'V002']
         },
         { 
           productId: 'P002', 
@@ -237,6 +235,7 @@ const PurchaseData = {
   // ==================== SEARCH & FILTER ====================
 
   searchProducts(term) {
+    if (!term) return [];
     const searchTerm = term.toLowerCase();
     return this.products.filter(p => 
       p.id.toLowerCase().includes(searchTerm) ||
@@ -269,6 +268,29 @@ const PurchaseData = {
     return this.products.filter(p => 
       vendor.suppliesProducts.includes(p.id)
     );
+  },
+
+  // Get product by ID
+  getProductById(productId) {
+    return this.products.find(p => p.id === productId);
+  },
+
+  // Get vendor by ID
+  getVendorById(vendorId) {
+    return this.vendors.find(v => v.id === vendorId);
+  },
+
+  // Get all unique vendors for multiple products
+  getVendorsForProducts(productIds) {
+    const vendorSet = new Set();
+    productIds.forEach(productId => {
+      this.vendors.forEach(vendor => {
+        if (vendor.suppliesProducts && vendor.suppliesProducts.includes(productId)) {
+          vendorSet.add(vendor.id);
+        }
+      });
+    });
+    return this.vendors.filter(v => vendorSet.has(v.id));
   },
 
   // ==================== STATISTICS ====================
@@ -370,6 +392,10 @@ const PurchaseData = {
     productRows.forEach((row, index) => {
       if (row.productId && row.quantity <= 0) {
         errors.push(`Product in row ${index + 1} must have quantity greater than 0`);
+      }
+
+      if (row.productId && (!row.selectedVendors || row.selectedVendors.length === 0)) {
+        errors.push(`Please select at least one vendor for product in row ${index + 1}`);
       }
     });
 
