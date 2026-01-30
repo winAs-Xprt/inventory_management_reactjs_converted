@@ -1,5 +1,6 @@
-// src/pages/ScrapManagementModals.jsx
-import React, { useState } from 'react';
+// src/modals/ScrapManagementModals.jsx
+import React, { useState, useEffect } from 'react';
+import { AVAILABLE_PRODUCTS, AVAILABLE_VENDORS, AVAILABLE_PLANTS } from '../data/ScrapManagementData';
 
 const ScrapModals = ({
   showDetailModal,
@@ -13,14 +14,18 @@ const ScrapModals = ({
   showConfirmModal,
   setShowConfirmModal,
   confirmConfig,
-  formatDate
+  formatDate,
+  addScrapInRecord,
+  addScrapOutRecord,
+  showToast
 }) => {
   // Scrap In form state
   const [scrapInForm, setScrapInForm] = useState({
-    product: '',
-    quantity: '',
-    requester: '',
+    productCode: '',
+    productName: '',
+    fromPerson: '',
     plant: '',
+    quantity: '',
     condition: '',
     workingPercentage: '',
     runtimeHours: '',
@@ -29,50 +34,107 @@ const ScrapModals = ({
   });
 
   // Scrap Out form state
-  const [scrapOutItems, setScrapOutItems] = useState([{ product: '', quantity: '' }]);
+  const [scrapOutItems, setScrapOutItems] = useState([{ productCode: '', quantity: '' }]);
   const [scrapOutForm, setScrapOutForm] = useState({
     vendor: '',
     vehicleNumber: '',
     driverName: '',
     remarks: '',
-    proofDocument: null
+    proofImage: null
   });
 
-  const handleScrapInSubmit = (e) => {
-    e.preventDefault();
-    console.log('Scrap In submitted:', scrapInForm);
-    // Reset form
+  // Handle Product Change in Scrap In
+  const handleProductChange = (code) => {
+    const product = AVAILABLE_PRODUCTS.find(p => p.code === code);
     setScrapInForm({
-      product: '',
-      quantity: '',
-      requester: '',
-      plant: '',
-      condition: '',
-      workingPercentage: '',
-      runtimeHours: '',
-      remarks: '',
-      proofImage: null
+      ...scrapInForm,
+      productCode: code,
+      productName: product ? product.name : ''
     });
-    setShowScrapInModal(false);
   };
 
+  // Handle Scrap In Submit
+  const handleScrapInSubmit = (e) => {
+    e.preventDefault();
+
+    if (!scrapInForm.productCode || !scrapInForm.quantity) {
+      showToast('Please fill all required fields', 'error');
+      return;
+    }
+
+    // Call the add function from parent
+    const success = addScrapInRecord(scrapInForm);
+
+    if (success) {
+      // Reset form
+      setScrapInForm({
+        productCode: '',
+        productName: '',
+        fromPerson: '',
+        plant: '',
+        quantity: '',
+        condition: '',
+        workingPercentage: '',
+        runtimeHours: '',
+        remarks: '',
+        proofImage: null
+      });
+      setShowScrapInModal(false);
+      showToast('Scrap In entry created successfully', 'success');
+    } else {
+      showToast('Failed to create scrap in entry', 'error');
+    }
+  };
+
+  // Handle Scrap Out Submit
   const handleScrapOutSubmit = (e) => {
     e.preventDefault();
-    console.log('Scrap Out submitted:', { items: scrapOutItems, ...scrapOutForm });
-    // Reset form
-    setScrapOutItems([{ product: '', quantity: '' }]);
-    setScrapOutForm({
-      vendor: '',
-      vehicleNumber: '',
-      driverName: '',
-      remarks: '',
-      proofDocument: null
+
+    if (scrapOutItems.some(item => !item.productCode || !item.quantity)) {
+      showToast('Please fill all product details', 'error');
+      return;
+    }
+
+    if (!scrapOutForm.vendor) {
+      showToast('Please select a vendor', 'error');
+      return;
+    }
+
+    // Convert item IDs to product codes and add product names
+    const itemsWithProducts = scrapOutItems.map(item => {
+      const availItem = availableScrapItems.find(a => a.id === item.productCode);
+      if (availItem) {
+        return {
+          productCode: availItem.productCode,
+          productName: availItem.productName,
+          quantity: item.quantity
+        };
+      }
+      return item;
     });
-    setShowScrapOutModal(false);
+
+    // Call the add function from parent
+    const success = addScrapOutRecord(scrapOutForm, itemsWithProducts);
+
+    if (success) {
+      // Reset form
+      setScrapOutItems([{ productCode: '', quantity: '' }]);
+      setScrapOutForm({
+        vendor: '',
+        vehicleNumber: '',
+        driverName: '',
+        remarks: '',
+        proofImage: null
+      });
+      setShowScrapOutModal(false);
+      showToast('Scrap Out entry created successfully', 'success');
+    } else {
+      showToast('Failed to create scrap out entry', 'error');
+    }
   };
 
   const addScrapOutItem = () => {
-    setScrapOutItems([...scrapOutItems, { product: '', quantity: '' }]);
+    setScrapOutItems([...scrapOutItems, { productCode: '', quantity: '' }]);
   };
 
   const removeScrapOutItem = (index) => {
@@ -86,6 +148,37 @@ const ScrapModals = ({
     newItems[index][field] = value;
     setScrapOutItems(newItems);
   };
+
+  // Reset forms when modals close
+  useEffect(() => {
+    if (!showScrapInModal) {
+      setScrapInForm({
+        productCode: '',
+        productName: '',
+        fromPerson: '',
+        plant: '',
+        quantity: '',
+        condition: '',
+        workingPercentage: '',
+        runtimeHours: '',
+        remarks: '',
+        proofImage: null
+      });
+    }
+  }, [showScrapInModal]);
+
+  useEffect(() => {
+    if (!showScrapOutModal) {
+      setScrapOutItems([{ productCode: '', quantity: '' }]);
+      setScrapOutForm({
+        vendor: '',
+        vehicleNumber: '',
+        driverName: '',
+        remarks: '',
+        proofImage: null
+      });
+    }
+  }, [showScrapOutModal]);
 
   return (
     <>
@@ -230,7 +323,7 @@ const ScrapModals = ({
                 {/* Remarks */}
                 <div className="col-span-2 bg-gray-50 p-3 rounded-lg border-l-4 border-teal-500">
                   <div className="text-[11px] text-gray-500 font-semibold uppercase tracking-wide mb-1">Remarks</div>
-                  <div className="text-sm font-bold text-gray-800">{selectedRecord.remarks}</div>
+                  <div className="text-sm font-bold text-gray-800">{selectedRecord.remarks || 'No remarks'}</div>
                 </div>
               </div>
             </div>
@@ -269,171 +362,164 @@ const ScrapModals = ({
             </div>
 
             {/* Modal Body */}
-            <form onSubmit={handleScrapInSubmit} className="p-6 overflow-y-auto flex-1">
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                {/* Product */}
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                    Product <span className="text-red-600">*</span>
-                  </label>
-                  <select
-                    value={scrapInForm.product}
-                    onChange={(e) => setScrapInForm({ ...scrapInForm, product: e.target.value })}
-                    className="w-full py-2 px-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all"
-                    required
-                  >
-                    <option value="">Select Product</option>
-                    <option value="PRD-001">Steel Bolt M8</option>
-                    <option value="PRD-002">Electric Motor 2HP</option>
-                    <option value="PRD-003">Hydraulic Pump</option>
-                    <option value="PRD-004">V-Belt Type A</option>
-                    <option value="PRD-005">Bearing 6205</option>
-                  </select>
-                </div>
+            {/* Modal Body */}
+<form onSubmit={handleScrapInSubmit} className="p-6 overflow-y-auto flex-1">
+  {/* Product and Quantity on same line */}
+  <div className="mb-4">
+    <label className="block text-xs font-semibold text-gray-700 mb-2">
+      Product & Quantity <span className="text-red-600">*</span>
+    </label>
+    <div className="grid grid-cols-[1fr_auto] gap-3">
+      <select
+        value={scrapInForm.productCode}
+        onChange={(e) => handleProductChange(e.target.value)}
+        className="py-2 px-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all"
+        required
+      >
+        <option value="">Select Product</option>
+        {AVAILABLE_PRODUCTS.map(p => (
+          <option key={p.code} value={p.code}>{p.name} ({p.code})</option>
+        ))}
+      </select>
+      <input
+        type="number"
+        value={scrapInForm.quantity}
+        onChange={(e) => setScrapInForm({ ...scrapInForm, quantity: e.target.value })}
+        placeholder="Qty"
+        min="1"
+        className="w-24 py-2 px-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all"
+        required
+      />
+    </div>
+  </div>
 
-                {/* Quantity */}
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                    Quantity <span className="text-red-600">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    value={scrapInForm.quantity}
-                    onChange={(e) => setScrapInForm({ ...scrapInForm, quantity: e.target.value })}
-                    placeholder="Enter quantity"
-                    min="1"
-                    className="w-full py-2 px-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all"
-                    required
-                  />
-                </div>
+  <div className="grid grid-cols-2 gap-4 mb-4">
+    {/* From Requester */}
+    <div>
+      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+        From Person/Department <span className="text-red-600">*</span>
+      </label>
+      <input
+        type="text"
+        value={scrapInForm.fromPerson}
+        onChange={(e) => setScrapInForm({ ...scrapInForm, fromPerson: e.target.value })}
+        placeholder="Enter name or department"
+        className="w-full py-2 px-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all"
+        required
+      />
+    </div>
 
-                {/* From Requester */}
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                    From Requester <span className="text-red-600">*</span>
-                  </label>
-                  <select
-                    value={scrapInForm.requester}
-                    onChange={(e) => setScrapInForm({ ...scrapInForm, requester: e.target.value })}
-                    className="w-full py-2 px-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all"
-                    required
-                  >
-                    <option value="">Select Requester</option>
-                    <option value="REQ-001">John Admin - Operations</option>
-                    <option value="REQ-002">Sarah CBM - Production</option>
-                    <option value="REQ-003">Mike Admin - Maintenance</option>
-                    <option value="REQ-004">Emily CBM - Quality</option>
-                    <option value="REQ-005">Robert Admin - Operations</option>
-                  </select>
-                </div>
+    {/* Plant/Location */}
+    <div>
+      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+        Plant/Location <span className="text-red-600">*</span>
+      </label>
+      <select
+        value={scrapInForm.plant}
+        onChange={(e) => setScrapInForm({ ...scrapInForm, plant: e.target.value })}
+        className="w-full py-2 px-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all"
+        required
+      >
+        <option value="">Select Plant</option>
+        {AVAILABLE_PLANTS.map(plant => (
+          <option key={plant} value={plant}>{plant}</option>
+        ))}
+      </select>
+    </div>
 
-                {/* Plant/Location */}
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                    Plant/Location <span className="text-red-600">*</span>
-                  </label>
-                  <select
-                    value={scrapInForm.plant}
-                    onChange={(e) => setScrapInForm({ ...scrapInForm, plant: e.target.value })}
-                    className="w-full py-2 px-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all"
-                    required
-                  >
-                    <option value="">Select Plant</option>
-                    <option value="PLT-001">Chennai Plant</option>
-                    <option value="PLT-002">Bangalore Plant</option>
-                    <option value="PLT-003">Mumbai Plant</option>
-                  </select>
-                </div>
+    {/* Condition */}
+    <div>
+      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+        Condition/Reason <span className="text-red-600">*</span>
+      </label>
+      <select
+        value={scrapInForm.condition}
+        onChange={(e) => setScrapInForm({ ...scrapInForm, condition: e.target.value })}
+        className="w-full py-2 px-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all"
+        required
+      >
+        <option value="">Select Condition</option>
+        <option value="Broken">Broken</option>
+        <option value="Expired">Expired</option>
+        <option value="Damaged">Damaged</option>
+        <option value="Worn Out">Worn Out</option>
+        <option value="Defective">Defective</option>
+      </select>
+    </div>
 
-                {/* Condition */}
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                    Condition/Reason <span className="text-red-600">*</span>
-                  </label>
-                  <select
-                    value={scrapInForm.condition}
-                    onChange={(e) => setScrapInForm({ ...scrapInForm, condition: e.target.value })}
-                    className="w-full py-2 px-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all"
-                    required
-                  >
-                    <option value="">Select Condition</option>
-                    <option value="Broken">Broken</option>
-                    <option value="Expired">Expired</option>
-                    <option value="Damaged">Damaged</option>
-                    <option value="Worn Out">Worn Out</option>
-                    <option value="Defective">Defective</option>
-                  </select>
-                </div>
+    {/* Working Percentage */}
+    <div>
+      <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+        Working Percentage <span className="text-red-600">*</span>
+      </label>
+      <input
+        type="number"
+        value={scrapInForm.workingPercentage}
+        onChange={(e) => setScrapInForm({ ...scrapInForm, workingPercentage: e.target.value })}
+        placeholder="0-100"
+        min="0"
+        max="100"
+        className="w-full py-2 px-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all"
+        required
+      />
+    </div>
+  </div>
 
-                {/* Working Percentage */}
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">Working Percentage</label>
-                  <input
-                    type="number"
-                    value={scrapInForm.workingPercentage}
-                    onChange={(e) => setScrapInForm({ ...scrapInForm, workingPercentage: e.target.value })}
-                    placeholder="0-100"
-                    min="0"
-                    max="100"
-                    className="w-full py-2 px-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all"
-                  />
-                </div>
-              </div>
+  {/* Runtime Hours */}
+  <div className="mb-4">
+    <label className="block text-xs font-semibold text-gray-700 mb-1.5">Runtime Hours (if applicable)</label>
+    <input
+      type="number"
+      value={scrapInForm.runtimeHours}
+      onChange={(e) => setScrapInForm({ ...scrapInForm, runtimeHours: e.target.value })}
+      placeholder="Enter runtime hours"
+      min="0"
+      className="w-full py-2 px-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all"
+    />
+  </div>
 
-              {/* Runtime Hours */}
-              <div className="mb-4">
-                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Runtime Hours (if applicable)</label>
-                <input
-                  type="number"
-                  value={scrapInForm.runtimeHours}
-                  onChange={(e) => setScrapInForm({ ...scrapInForm, runtimeHours: e.target.value })}
-                  placeholder="Enter runtime hours"
-                  min="0"
-                  className="w-full py-2 px-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all"
-                />
-              </div>
+  {/* Remarks */}
+  <div className="mb-4">
+    <label className="block text-xs font-semibold text-gray-700 mb-1.5">Remarks</label>
+    <textarea
+      value={scrapInForm.remarks}
+      onChange={(e) => setScrapInForm({ ...scrapInForm, remarks: e.target.value })}
+      rows="3"
+      placeholder="Enter additional remarks..."
+      className="w-full py-2 px-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all resize-none"
+    ></textarea>
+  </div>
 
-              {/* Remarks */}
-              <div className="mb-4">
-                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Remarks</label>
-                <textarea
-                  value={scrapInForm.remarks}
-                  onChange={(e) => setScrapInForm({ ...scrapInForm, remarks: e.target.value })}
-                  rows="3"
-                  placeholder="Enter additional remarks..."
-                  className="w-full py-2 px-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all resize-none"
-                ></textarea>
-              </div>
+  {/* Upload Proof Image */}
+  <div className="mb-4">
+    <label className="block text-xs font-semibold text-gray-700 mb-1.5">Upload Proof Image</label>
+    <input
+      type="file"
+      accept="image/*"
+      onChange={(e) => setScrapInForm({ ...scrapInForm, proofImage: e.target.files[0] })}
+      className="w-full py-2 px-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-teal-400 transition-all"
+    />
+  </div>
 
-              {/* Upload Proof Image */}
-              <div className="mb-4">
-                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Upload Proof Image</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setScrapInForm({ ...scrapInForm, proofImage: e.target.files[0] })}
-                  className="w-full py-2 px-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-teal-400 transition-all"
-                />
-              </div>
+  {/* Modal Footer */}
+  <div className="flex gap-3 pt-4 border-t border-gray-200">
+    <button
+      type="button"
+      onClick={() => setShowScrapInModal(false)}
+      className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-700 rounded-md text-sm font-semibold hover:bg-gray-300 transition-all"
+    >
+      Cancel
+    </button>
+    <button
+      type="submit"
+      className="flex-1 px-4 py-2.5 bg-gradient-to-r from-teal-400 to-teal-700 text-white rounded-md text-sm font-semibold hover:-translate-y-0.5 hover:shadow-lg transition-all flex items-center justify-center gap-2"
+    >
+      <i className="fas fa-save"></i>
+      Save Scrap In Entry
+    </button>
+  </div>
+</form>
 
-              {/* Modal Footer */}
-              <div className="flex gap-3 pt-4 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={() => setShowScrapInModal(false)}
-                  className="flex-1 px-4 py-2.5 bg-gray-200 text-gray-700 rounded-md text-sm font-semibold hover:bg-gray-300 transition-all"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2.5 bg-gradient-to-r from-teal-400 to-teal-700 text-white rounded-md text-sm font-semibold hover:-translate-y-0.5 hover:shadow-lg transition-all flex items-center justify-center gap-2"
-                >
-                  <i className="fas fa-save"></i>
-                  Save Scrap In Entry
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}
@@ -472,10 +558,9 @@ const ScrapModals = ({
                   required
                 >
                   <option value="">Select Vendor</option>
-                  <option value="VND-001">EcoRecycle Pvt Ltd</option>
-                  <option value="VND-002">Green Disposal Partners</option>
-                  <option value="VND-003">Waste Management Corp</option>
-                  <option value="VND-004">Scrap Solutions India</option>
+                  {AVAILABLE_VENDORS.map(v => (
+                    <option key={v.id} value={v.id}>{v.name}</option>
+                  ))}
                 </select>
               </div>
 
@@ -488,8 +573,8 @@ const ScrapModals = ({
                   {scrapOutItems.map((item, index) => (
                     <div key={index} className="grid grid-cols-[1fr_auto_auto] gap-3 items-center mb-3 last:mb-0 bg-white p-3 rounded-lg border border-gray-200">
                       <select
-                        value={item.product}
-                        onChange={(e) => updateScrapOutItem(index, 'product', e.target.value)}
+                        value={item.productCode}
+                        onChange={(e) => updateScrapOutItem(index, 'productCode', e.target.value)}
                         className="py-2 px-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all"
                         required
                       >
@@ -535,25 +620,31 @@ const ScrapModals = ({
               <div className="grid grid-cols-2 gap-4 mb-4">
                 {/* Vehicle Number */}
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">Vehicle Number</label>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                    Vehicle Number <span className="text-red-600">*</span>
+                  </label>
                   <input
                     type="text"
                     value={scrapOutForm.vehicleNumber}
                     onChange={(e) => setScrapOutForm({ ...scrapOutForm, vehicleNumber: e.target.value })}
-                    placeholder="Enter vehicle number"
+                    placeholder="TN01AB1234"
                     className="w-full py-2 px-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all"
+                    required
                   />
                 </div>
 
                 {/* Driver Name */}
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">Driver Name</label>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                    Driver Name <span className="text-red-600">*</span>
+                  </label>
                   <input
                     type="text"
                     value={scrapOutForm.driverName}
                     onChange={(e) => setScrapOutForm({ ...scrapOutForm, driverName: e.target.value })}
                     placeholder="Enter driver name"
                     className="w-full py-2 px-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all"
+                    required
                   />
                 </div>
               </div>
@@ -573,14 +664,13 @@ const ScrapModals = ({
               {/* Upload Proof Document/Image */}
               <div className="mb-4">
                 <label className="block text-xs font-semibold text-gray-700 mb-1.5">
-                  Upload Proof Document/Image <span className="text-red-600">*</span>
+                  Upload Proof Document/Image
                 </label>
                 <input
                   type="file"
                   accept="image/*,application/pdf"
-                  onChange={(e) => setScrapOutForm({ ...scrapOutForm, proofDocument: e.target.files[0] })}
+                  onChange={(e) => setScrapOutForm({ ...scrapOutForm, proofImage: e.target.files[0] })}
                   className="w-full py-2 px-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-teal-400 transition-all"
-                  required
                 />
               </div>
 
@@ -606,7 +696,7 @@ const ScrapModals = ({
         </div>
       )}
 
-      {/* Confirm Modal (same as before) */}
+      {/* Confirm Modal */}
       {showConfirmModal && (
         <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-[10000] p-4">
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full animate-slideUp">

@@ -5,9 +5,91 @@ import MaintenanceModals from '../modals/MaintenanceModals';
 
 const ITEMS_PER_PAGE = 10;
 
+// ==========================================================================
+// TOAST NOTIFICATION COMPONENT
+// ==========================================================================
+const Toast = ({ show, message, type }) => {
+  if (!show) return null;
+
+  const iconMap = {
+    success: 'fa-check-circle',
+    error: 'fa-exclamation-circle',
+    warning: 'fa-exclamation-triangle',
+    info: 'fa-info-circle'
+  };
+
+  const bgColorMap = {
+    success: 'bg-green-500',
+    error: 'bg-red-500',
+    warning: 'bg-yellow-500',
+    info: 'bg-blue-500'
+  };
+
+  return (
+    <div className={`fixed top-5 right-5 ${bgColorMap[type]} text-white px-5 py-3.5 rounded-md flex items-center gap-3 font-semibold text-sm z-[9999] shadow-2xl animate-in slide-in-from-right duration-300`}>
+      <i className={`fas ${iconMap[type]} text-lg`}></i>
+      <span>{message}</span>
+    </div>
+  );
+};
+
+// ==========================================================================
+// CONFIRMATION MODAL COMPONENT
+// ==========================================================================
+const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, type = 'warning', isDanger = false }) => {
+  if (!isOpen) return null;
+
+  const iconMap = {
+    success: { icon: 'fa-check-circle', bg: 'bg-green-100', text: 'text-green-500' },
+    error: { icon: 'fa-exclamation-circle', bg: 'bg-red-100', text: 'text-red-500' },
+    warning: { icon: 'fa-exclamation-triangle', bg: 'bg-yellow-100', text: 'text-yellow-500' },
+    info: { icon: 'fa-info-circle', bg: 'bg-blue-100', text: 'text-blue-500' }
+  };
+
+  const config = iconMap[type];
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-[9999] animate-in fade-in duration-200">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onCancel}></div>
+      <div className="relative w-[90%] max-w-md animate-in slide-in-from-bottom duration-300">
+        <div className="bg-white rounded-xl shadow-2xl overflow-hidden">
+          <div className="flex items-center gap-4 px-6 py-6 border-b-2 border-gray-200 bg-gray-50">
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl flex-shrink-0 ${config.bg} ${config.text}`}>
+              <i className={`fas ${config.icon}`}></i>
+            </div>
+            <h3 className="text-xl font-bold text-gray-800 m-0">{title}</h3>
+          </div>
+          <div className="px-6 py-6">
+            <p className="text-sm leading-relaxed text-gray-700 m-0">{message}</p>
+          </div>
+          <div className="flex gap-3 px-6 py-5 border-t-2 border-gray-200 bg-gray-50">
+            <button
+              onClick={onCancel}
+              className="flex-1 px-5 py-3 bg-gray-50 text-gray-700 border-2 border-gray-200 rounded-md text-sm font-semibold cursor-pointer hover:bg-white hover:border-gray-300 transition-all duration-200 flex items-center justify-center gap-2"
+            >
+              <i className="fas fa-times"></i>
+              Cancel
+            </button>
+            <button
+              onClick={onConfirm}
+              className={`flex-1 px-5 py-3 text-white rounded-md text-sm font-semibold cursor-pointer hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 ${
+                isDanger ? 'bg-red-500 hover:bg-red-600' : 'bg-teal-500 hover:bg-teal-600'
+              }`}
+            >
+              <i className="fas fa-check"></i>
+              Confirm
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Maintenance = () => {
   const {
     maintenanceRecords,
+    setMaintenanceRecords,
     products,
     stats,
     currentPeriod,
@@ -34,6 +116,7 @@ const Maintenance = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmConfig, setConfirmConfig] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   const filteredRecords = getFilteredRecords();
 
@@ -41,6 +124,13 @@ const Maintenance = () => {
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const paginatedRecords = filteredRecords.slice(startIndex, endIndex);
+
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast({ show: false, message: '', type: 'success' });
+    }, 3000);
+  };
 
   const handleViewDetails = (record) => {
     setSelectedRecord(record);
@@ -69,7 +159,11 @@ const Maintenance = () => {
       type: 'warning',
       isDanger: true,
       onConfirm: () => {
-        console.log('Cancelling order:', record.soNumber);
+        const updatedRecords = maintenanceRecords.map(r =>
+          r.id === record.id ? { ...r, status: 'Cancelled', cancelReason: 'Cancelled by user' } : r
+        );
+        setMaintenanceRecords(updatedRecords);
+        showToast('Service order cancelled successfully', 'success');
       }
     });
     setShowConfirmModal(true);
@@ -77,15 +171,27 @@ const Maintenance = () => {
 
   const handleApplyFilters = () => {
     setCurrentPage(1);
+    showToast('Filters applied successfully', 'info');
   };
 
   const handleClearFilters = () => {
     resetFilters();
     setCurrentPage(1);
+    showToast('Filters cleared', 'info');
   };
 
   const handleRefresh = () => {
-    window.location.reload();
+    const refreshButton = document.querySelector('[title="Refresh"]');
+    if (refreshButton) {
+      const icon = refreshButton.querySelector('i');
+      icon.classList.add('fa-spin');
+    }
+
+    showToast('Refreshing maintenance data...', 'info');
+
+    setTimeout(() => {
+      window.location.reload();
+    }, 800);
   };
 
   const handleTypeFilterChange = (value) => {
@@ -112,17 +218,6 @@ const Maintenance = () => {
       'Cancelled': 'bg-red-50 text-red-600 border border-red-200'
     };
     return statusMap[status] || 'bg-gray-50 text-gray-600 border border-gray-200';
-  };
-
-  const getPeriodLabel = () => {
-    const labels = {
-      'today': 'Today',
-      'this-week': 'This Week',
-      'this-month': 'This Month',
-      'this-year': 'This Year',
-      'all-time': 'All Time'
-    };
-    return labels[currentPeriod] || 'This Month';
   };
 
   return (
@@ -174,6 +269,7 @@ const Maintenance = () => {
               <button
                 onClick={handleRefresh}
                 className="px-4 py-2 bg-gradient-to-r from-teal-400 to-teal-700 text-white rounded-md text-sm font-semibold hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 flex items-center gap-2"
+                title="Refresh"
               >
                 <i className="fas fa-sync-alt"></i>
                 Refresh
@@ -314,7 +410,7 @@ const Maintenance = () => {
           <div className="px-5 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
             <h3 className="text-sm font-bold text-gray-700 flex items-center gap-2">
               <i className="fas fa-tools text-teal-500"></i>
-              Service Orders
+              Service Orders ({filteredRecords.length})
             </h3>
           </div>
 
@@ -481,11 +577,26 @@ const Maintenance = () => {
         setShowConversationModal={setShowConversationModal}
         selectedRecord={selectedRecord}
         products={products}
-        showConfirmModal={showConfirmModal}
-        setShowConfirmModal={setShowConfirmModal}
-        confirmConfig={confirmConfig}
         formatDate={formatDate}
+        showToast={showToast}
+        maintenanceRecords={maintenanceRecords}
+        setMaintenanceRecords={setMaintenanceRecords}
       />
+
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        type={confirmConfig.type}
+        isDanger={confirmConfig.isDanger}
+        onConfirm={() => {
+          confirmConfig.onConfirm?.();
+          setShowConfirmModal(false);
+        }}
+        onCancel={() => setShowConfirmModal(false)}
+      />
+
+      <Toast show={toast.show} message={toast.message} type={toast.type} />
     </div>
   );
 };

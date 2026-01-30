@@ -39,19 +39,6 @@ const Inventory = () => {
     setShowDetailModal(true);
   };
 
-  const handleDeleteItem = (item) => {
-    setConfirmConfig({
-      title: 'Delete Stock Movement',
-      message: `Are you sure you want to delete the stock movement for "${item.productName}"? This action cannot be undone.`,
-      type: 'error',
-      isDanger: true,
-      onConfirm: () => {
-        console.log('Deleting item:', item.id);
-      }
-    });
-    setShowConfirmModal(true);
-  };
-
   const handleApplyFilters = () => {
     setCurrentPage(1);
     console.log('Filters applied');
@@ -388,22 +375,13 @@ const Inventory = () => {
                         </div>
                       </td>
                       <td className="px-4 py-3 border-b border-gray-200">
-                        <div className="flex gap-1.5">
-                          <button
-                            onClick={() => handleViewDetails(item)}
-                            className="w-8 h-8 bg-blue-500 text-white rounded-md text-xs hover:-translate-y-px hover:shadow-md transition-all flex items-center justify-center"
-                            title="View Details"
-                          >
-                            <i className="fas fa-eye text-xs"></i>
-                          </button>
-                          <button
-                            onClick={() => handleDeleteItem(item)}
-                            className="w-8 h-8 bg-red-500 text-white rounded-md text-xs hover:-translate-y-px hover:shadow-md transition-all flex items-center justify-center"
-                            title="Delete"
-                          >
-                            <i className="fas fa-trash text-xs"></i>
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => handleViewDetails(item)}
+                          className="w-8 h-8 bg-blue-500 text-white rounded-md text-xs hover:-translate-y-px hover:shadow-md transition-all flex items-center justify-center"
+                          title="View Details"
+                        >
+                          <i className="fas fa-eye text-xs"></i>
+                        </button>
                       </td>
                     </tr>
                   ))}

@@ -274,7 +274,7 @@ const CONVERSATIONS = {
 };
 
 export const useMaintenanceData = () => {
-  const [maintenanceRecords] = useState(MAINTENANCE_RECORDS);
+  const [maintenanceRecords, setMaintenanceRecords] = useState(MAINTENANCE_RECORDS);
   const [products] = useState(PRODUCTS);
   const [conversations] = useState(CONVERSATIONS);
   const [currentPeriod, setCurrentPeriod] = useState('this-month');
@@ -442,6 +442,7 @@ export const useMaintenanceData = () => {
 
   return {
     maintenanceRecords,
+    setMaintenanceRecords,
     products,
     conversations,
     stats,
