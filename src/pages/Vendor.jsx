@@ -155,7 +155,7 @@ const VendorTypeBadge = ({ type }) => {
 };
 
 // ==========================================================================
-// VENDOR MODAL COMPONENT
+// VENDOR MODAL COMPONENT WITH ADVANCED VALIDATION
 // ==========================================================================
 const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
   const [formData, setFormData] = useState({
@@ -179,6 +179,59 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
   });
 
   const [vendorTypeError, setVendorTypeError] = useState(false);
+  const [vendorNameError, setVendorNameError] = useState('');
+  const [companyNameError, setCompanyNameError] = useState('');
+
+  // Advanced validation function for vendor name
+  const validateVendorName = (value) => {
+    const trimmedValue = value.trim();
+    const valueWithoutSpaces = value.replace(/\s/g, '');
+
+    if (!trimmedValue) {
+      return 'Vendor name is required';
+    }
+
+    if (valueWithoutSpaces.length < 3) {
+      return 'Vendor name must be at least 3 characters (excluding spaces)';
+    }
+
+    if (/\d/.test(value)) {
+      return 'Numbers are not allowed in vendor name';
+    }
+
+    if (!/^[a-zA-Z\s]+$/.test(value)) {
+      return 'Only letters and spaces are allowed';
+    }
+
+    if (/\s{2,}/.test(value)) {
+      return 'Multiple consecutive spaces are not allowed';
+    }
+
+    if (value !== trimmedValue) {
+      return 'Vendor name cannot start or end with spaces';
+    }
+
+    return '';
+  };
+
+  // Advanced validation function for company name
+  const validateCompanyName = (value) => {
+    const trimmedValue = value.trim();
+
+    if (!trimmedValue) {
+      return 'Company name is required';
+    }
+
+    if (trimmedValue.length < 3) {
+      return 'Company name must be at least 3 characters';
+    }
+
+    if (value !== trimmedValue) {
+      return 'Company name cannot start or end with spaces';
+    }
+
+    return '';
+  };
 
   useEffect(() => {
     if (vendor) {
@@ -226,10 +279,64 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
       });
     }
     setVendorTypeError(false);
+    setVendorNameError('');
+    setCompanyNameError('');
   }, [vendor, isOpen]);
+
+  // Handle vendor name change with validation
+  const handleVendorNameChange = (e) => {
+    let value = e.target.value;
+
+    // Remove any characters that are not letters or spaces in real-time
+    value = value.replace(/[^a-zA-Z\s]/g, '');
+
+    // Prevent multiple consecutive spaces
+    value = value.replace(/\s{2,}/g, ' ');
+
+    // Limit to 100 characters
+    if (value.length > 100) {
+      value = value.substring(0, 100);
+    }
+
+    setFormData({ ...formData, vendorName: value });
+
+    // Real-time validation feedback
+    const error = validateVendorName(value);
+    setVendorNameError(error);
+  };
+
+  // Handle company name change with validation
+  const handleCompanyNameChange = (e) => {
+    let value = e.target.value;
+
+    // Limit to 100 characters
+    if (value.length > 100) {
+      value = value.substring(0, 100);
+    }
+
+    setFormData({ ...formData, companyName: value });
+
+    // Real-time validation feedback
+    const error = validateCompanyName(value);
+    setCompanyNameError(error);
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    // Validate vendor name
+    const vendorNameValidation = validateVendorName(formData.vendorName);
+    if (vendorNameValidation) {
+      setVendorNameError(vendorNameValidation);
+      return;
+    }
+
+    // Validate company name
+    const companyNameValidation = validateCompanyName(formData.companyName);
+    if (companyNameValidation) {
+      setCompanyNameError(companyNameValidation);
+      return;
+    }
 
     const selectedTypes = [];
     if (formData.vendorTypes.purchaseVendor) selectedTypes.push(VENDOR_TYPES.PURCHASE);
@@ -242,13 +349,15 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
     }
 
     setVendorTypeError(false);
-    
+
     const finalWhatsappNumber = formData.whatsappSameAsPhone ? formData.contact : formData.whatsappNumber;
-    
+
     onSave({ 
       ...formData, 
       vendorTypes: selectedTypes,
-      whatsappNumber: finalWhatsappNumber
+      whatsappNumber: finalWhatsappNumber,
+      vendorName: formData.vendorName.trim(),
+      companyName: formData.companyName.trim()
     });
   };
 
@@ -276,7 +385,7 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
 
           <div className="p-6 overflow-y-auto flex-1">
             <form onSubmit={handleSubmit} id="vendorForm">
-              
+
               {/* Vendor Name & Company Name */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div className="flex flex-col gap-1.5">
@@ -287,15 +396,27 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
                   <input
                     type="text"
                     value={formData.vendorName}
-                    onChange={(e) => setFormData({ ...formData, vendorName: e.target.value })}
-                    placeholder="Contact person name"
+                    onChange={handleVendorNameChange}
+                    placeholder="Contact person name (letters only)"
                     required
-                    minLength="3"
-                    maxLength="100"
-                    className="py-2.5 px-3 border-2 border-gray-200 rounded-md text-gray-800 text-sm outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all duration-200 w-full bg-white"
+                    className={`py-2.5 px-3 border-2 rounded-md text-gray-800 text-sm outline-none focus:ring-4 transition-all duration-200 w-full bg-white ${
+                      vendorNameError 
+                        ? 'border-red-500 focus:border-red-500 focus:ring-red-100' 
+                        : 'border-gray-200 focus:border-teal-400 focus:ring-cyan-100'
+                    }`}
                   />
+                  {vendorNameError && (
+                    <small className="text-red-500 text-xs font-semibold flex items-center gap-1">
+                      <i className="fas fa-exclamation-circle"></i> {vendorNameError}
+                    </small>
+                  )}
+                  {!vendorNameError && formData.vendorName && (
+                    <small className="text-green-500 text-xs font-semibold flex items-center gap-1">
+                      <i className="fas fa-check-circle"></i> Valid vendor name
+                    </small>
+                  )}
                   <small className="text-gray-500 text-xs block mt-1">
-                    <i className="fas fa-info-circle"></i> Contact person name (required)
+                    <i className="fas fa-info-circle"></i> Only letters and spaces allowed (min 3 characters)
                   </small>
                 </div>
 
@@ -307,15 +428,27 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
                   <input
                     type="text"
                     value={formData.companyName}
-                    onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                    onChange={handleCompanyNameChange}
                     placeholder="Registered company name"
                     required
-                    minLength="3"
-                    maxLength="100"
-                    className="py-2.5 px-3 border-2 border-gray-200 rounded-md text-gray-800 text-sm outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all duration-200 w-full bg-white"
+                    className={`py-2.5 px-3 border-2 rounded-md text-gray-800 text-sm outline-none focus:ring-4 transition-all duration-200 w-full bg-white ${
+                      companyNameError 
+                        ? 'border-red-500 focus:border-red-500 focus:ring-red-100' 
+                        : 'border-gray-200 focus:border-teal-400 focus:ring-cyan-100'
+                    }`}
                   />
+                  {companyNameError && (
+                    <small className="text-red-500 text-xs font-semibold flex items-center gap-1">
+                      <i className="fas fa-exclamation-circle"></i> {companyNameError}
+                    </small>
+                  )}
+                  {!companyNameError && formData.companyName && (
+                    <small className="text-green-500 text-xs font-semibold flex items-center gap-1">
+                      <i className="fas fa-check-circle"></i> Valid company name
+                    </small>
+                  )}
                   <small className="text-gray-500 text-xs block mt-1">
-                    <i className="fas fa-info-circle"></i> Registered company name (required)
+                    <i className="fas fa-info-circle"></i> Registered company name (min 3 characters)
                   </small>
                 </div>
               </div>
@@ -577,65 +710,26 @@ const VendorModal = ({ isOpen, onClose, vendor, onSave }) => {
                 </div>
               </div>
 
-              {/* GST & Status */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
-                    <i className="fas fa-file-invoice text-teal-500"></i>
-                    GST Number <small className="text-gray-500 font-normal">(Optional)</small>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.gst}
-                    onChange={(e) => {
-                      const value = e.target.value.toUpperCase().replace(/[^0-9A-Z]/g, '').slice(0, 15);
-                      setFormData({ ...formData, gst: value });
-                    }}
-                    placeholder="33AAAPL1234C1Z9"
-                    maxLength="15"
-                    className="py-2.5 px-3 border-2 border-gray-200 rounded-md text-gray-800 text-sm outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all duration-200 w-full bg-white"
-                  />
-                  <small className="text-gray-500 text-xs block mt-1">
-                    <i className="fas fa-info-circle"></i> 15-character GST format (optional)
-                  </small>
-                </div>
-
-                {isEditMode && (
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
-                      <i className="fas fa-toggle-on text-teal-500"></i>
-                      Status <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={formData.status}
-                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                      required
-                      className="py-2.5 px-3 border-2 border-gray-200 rounded-md text-gray-800 text-sm outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all duration-200 w-full bg-white cursor-pointer"
-                    >
-                      <option value={VENDOR_STATUS.ACTIVE}>Active</option>
-                      <option value={VENDOR_STATUS.INACTIVE}>Inactive</option>
-                    </select>
-                    <small className="text-gray-500 text-xs block mt-1">
-                      <i className="fas fa-info-circle"></i> Change vendor status
-                    </small>
-                  </div>
-                )}
-
-                {!isEditMode && (
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
-                      <i className="fas fa-toggle-on text-teal-500"></i>
-                      Status
-                    </label>
-                    <div className="py-2.5 px-3 border-2 border-green-200 bg-green-50 rounded-md text-sm flex items-center gap-2">
-                      <i className="fas fa-check-circle text-green-500"></i>
-                      <span className="text-green-700 font-semibold">Will be set to Active by default</span>
-                    </div>
-                    <small className="text-gray-500 text-xs block mt-1">
-                      <i className="fas fa-info-circle"></i> New vendors are automatically active
-                    </small>
-                  </div>
-                )}
+              {/* GST Number */}
+              <div className="flex flex-col gap-1.5 mb-4">
+                <label className="text-xs font-semibold text-gray-600 flex items-center gap-1.5">
+                  <i className="fas fa-file-invoice text-teal-500"></i>
+                  GST Number <small className="text-gray-500 font-normal">(Optional)</small>
+                </label>
+                <input
+                  type="text"
+                  value={formData.gst}
+                  onChange={(e) => {
+                    const value = e.target.value.toUpperCase().replace(/[^0-9A-Z]/g, '').slice(0, 15);
+                    setFormData({ ...formData, gst: value });
+                  }}
+                  placeholder="33AAAPL1234C1Z9"
+                  maxLength="15"
+                  className="py-2.5 px-3 border-2 border-gray-200 rounded-md text-gray-800 text-sm outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all duration-200 w-full bg-white"
+                />
+                <small className="text-gray-500 text-xs block mt-1">
+                  <i className="fas fa-info-circle"></i> 15-character GST format (optional)
+                </small>
               </div>
 
             </form>
@@ -696,7 +790,7 @@ const ViewVendorModal = ({ isOpen, onClose, vendor }) => {
                 </div>
                 <div>
                   <h3 className="m-0 text-gray-800 text-xl font-bold">{vendor.companyName || vendor.vendorName}</h3>
-                  <p className="mt-1 mb-0 text-gray-500">Contact: {vendor.vendorName} | ID: #{vendor.id}</p>
+                  <p className="mt-1 mb-0 text-gray-500">Contact: {vendor.vendorName} | ID: {vendor.id}</p>
                 </div>
               </div>
 
@@ -895,7 +989,6 @@ const Vendor = () => {
   const [searchValue, setSearchValue] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterType, setFilterType] = useState('');
-  const [selectedVendors, setSelectedVendors] = useState([]);
 
   const [showModal, setShowModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -904,6 +997,7 @@ const Vendor = () => {
   const [editingVendor, setEditingVendor] = useState(null);
   const [viewingVendor, setViewingVendor] = useState(null);
   const [deletingVendorId, setDeletingVendorId] = useState(null);
+  const [toggleStatusVendor, setToggleStatusVendor] = useState(null);
 
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
@@ -968,7 +1062,6 @@ const Vendor = () => {
       setSearchValue('');
       setFilterStatus('');
       setFilterType('');
-      setSelectedVendors([]);
       setCurrentPage(1);
       
       if (refreshButton) {
@@ -1006,17 +1099,28 @@ const Vendor = () => {
       setVendors(vendors.filter(v => v.id !== deletingVendorId));
       showToast('Vendor deleted successfully', 'success');
       setDeletingVendorId(null);
-    } else if (selectedVendors.length > 0) {
-      setVendors(vendors.filter(v => !selectedVendors.includes(v.id)));
-      showToast(`${selectedVendors.length} vendors deleted successfully`, 'success');
-      setSelectedVendors([]);
     }
     setShowConfirmModal(false);
   };
 
-  const handleBulkDelete = () => {
-    setDeletingVendorId(null);
-    setShowConfirmModal(true);
+  // TOGGLE VENDOR STATUS (Block/Unblock)
+  const handleToggleStatus = (vendor) => {
+    setToggleStatusVendor(vendor);
+  };
+
+  const confirmToggleStatus = () => {
+    if (toggleStatusVendor) {
+      const newStatus = toggleStatusVendor.status === VENDOR_STATUS.ACTIVE ? VENDOR_STATUS.INACTIVE : VENDOR_STATUS.ACTIVE;
+      const updatedVendors = vendors.map(v => 
+        v.id === toggleStatusVendor.id ? { ...v, status: newStatus } : v
+      );
+      setVendors(updatedVendors);
+      showToast(
+        `Vendor ${newStatus === VENDOR_STATUS.ACTIVE ? 'activated' : 'blocked'} successfully`, 
+        'success'
+      );
+      setToggleStatusVendor(null);
+    }
   };
 
   const handleSaveVendor = (formData) => {
@@ -1034,7 +1138,7 @@ const Vendor = () => {
         city: formData.city,
         state: formData.state,
         gst: formData.gst,
-        status: formData.status,
+        // Status remains unchanged in edit mode
         vendorType: formData.vendorTypes
       };
 
@@ -1055,7 +1159,7 @@ const Vendor = () => {
         city: formData.city,
         state: formData.state,
         gst: formData.gst,
-        status: VENDOR_STATUS.ACTIVE,
+        status: VENDOR_STATUS.ACTIVE, // Always active for new vendors
         vendorType: formData.vendorTypes,
         lastOrderDate: new Date().toISOString().split('T')[0],
         totalOrders: 0,
@@ -1071,23 +1175,8 @@ const Vendor = () => {
     setEditingVendor(null);
   };
 
-  const handleSelectAll = (e) => {
-    if (e.target.checked) {
-      setSelectedVendors(currentVendors.map(v => v.id));
-    } else {
-      setSelectedVendors([]);
-    }
-  };
-
-  const handleSelectVendor = (id) => {
-    setSelectedVendors(prev =>
-      prev.includes(id) ? prev.filter(vid => vid !== id) : [...prev, id]
-    );
-  };
-
   const handlePageChange = (page) => {
     setCurrentPage(page);
-    setSelectedVendors([]);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -1242,37 +1331,11 @@ const Vendor = () => {
           </div>
         </div>
 
-        {selectedVendors.length > 0 && (
-          <div className="bg-cyan-50 p-4 border-b-2 border-gray-200 flex justify-between items-center gap-4 flex-wrap">
-            <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-              <i className="fas fa-check-square text-teal-500 text-base"></i>
-              <span className="text-teal-600 font-bold text-base">{selectedVendors.length}</span> vendors selected
-            </div>
-            <div className="flex gap-2 items-center flex-wrap">
-              <button
-                onClick={handleBulkDelete}
-                className="px-4 py-2 bg-gradient-to-br from-red-500 to-red-700 text-white border-none rounded-md text-sm font-semibold cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg flex items-center gap-2"
-              >
-                <i className="fas fa-trash"></i>
-                Delete Selected
-              </button>
-            </div>
-          </div>
-        )}
-
         <div className="overflow-x-auto">
           <table className="w-full border-collapse min-w-[1400px]">
             <thead className="bg-gray-50">
               <tr>
-                <th className="p-3 text-left border-b border-gray-200 font-bold text-gray-600 text-xs uppercase tracking-wider bg-gray-50 w-12">
-                  <input
-                    type="checkbox"
-                    onChange={handleSelectAll}
-                    checked={selectedVendors.length === currentVendors.length && currentVendors.length > 0}
-                    className="w-4 h-4 cursor-pointer accent-teal-500"
-                  />
-                </th>
-                <th className="p-3 text-left border-b border-gray-200 font-bold text-gray-600 text-xs uppercase tracking-wider bg-gray-50 w-16">ID</th>
+                <th className="p-3 text-left border-b border-gray-200 font-bold text-gray-600 text-xs uppercase tracking-wider bg-gray-50 w-16">S.No</th>
                 <th className="p-3 text-left border-b border-gray-200 font-bold text-gray-600 text-xs uppercase tracking-wider bg-gray-50">Vendor Details</th>
                 <th className="p-3 text-left border-b border-gray-200 font-bold text-gray-600 text-xs uppercase tracking-wider bg-gray-50">Contact Info</th>
                 <th className="p-3 text-left border-b border-gray-200 font-bold text-gray-600 text-xs uppercase tracking-wider bg-gray-50">Location & GST</th>
@@ -1283,20 +1346,13 @@ const Vendor = () => {
             </thead>
             <tbody>
               {currentVendors.length > 0 ? (
-                currentVendors.map((vendor) => {
+                currentVendors.map((vendor, index) => {
+                  const serialNumber = indexOfFirstItem + index + 1;
                   const vendorTypes = Array.isArray(vendor.vendorType) ? vendor.vendorType : [vendor.vendorType];
                   return (
                     <tr key={vendor.id} className="transition-all hover:bg-cyan-50">
                       <td className="p-3 border-b border-gray-200 text-gray-800 text-sm">
-                        <input
-                          type="checkbox"
-                          checked={selectedVendors.includes(vendor.id)}
-                          onChange={() => handleSelectVendor(vendor.id)}
-                          className="w-4 h-4 cursor-pointer accent-teal-500"
-                        />
-                      </td>
-                      <td className="p-3 border-b border-gray-200 text-gray-800 text-sm">
-                        <div className="font-bold text-gray-700">#{vendor.id}</div>
+                        <div className="font-bold text-gray-700">{serialNumber}</div>
                       </td>
                       <td className="p-3 border-b border-gray-200 text-gray-800 text-sm">
                         <div className="flex items-center gap-3">
@@ -1367,6 +1423,15 @@ const Vendor = () => {
                             <i className="fas fa-edit text-xs"></i>
                           </button>
                           <button
+                            onClick={() => handleToggleStatus(vendor)}
+                            className={`w-8 h-8 border-none rounded-md cursor-pointer text-xs font-semibold transition-all inline-flex items-center justify-center text-white shadow-sm hover:-translate-y-px hover:shadow-md ${
+                              vendor.status === VENDOR_STATUS.ACTIVE ? 'bg-orange-500' : 'bg-green-500'
+                            }`}
+                            title={vendor.status === VENDOR_STATUS.ACTIVE ? 'Block Vendor' : 'Activate Vendor'}
+                          >
+                            <i className={`fas ${vendor.status === VENDOR_STATUS.ACTIVE ? 'fa-ban' : 'fa-check-circle'} text-xs`}></i>
+                          </button>
+                          <button
                             onClick={() => handleDeleteVendor(vendor.id)}
                             className="w-8 h-8 border-none rounded-md cursor-pointer text-xs font-semibold transition-all inline-flex items-center justify-center bg-red-500 text-white shadow-sm hover:-translate-y-px hover:shadow-md"
                             title="Delete Vendor"
@@ -1380,9 +1445,10 @@ const Vendor = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan="8" className="text-center p-10 text-gray-500">
+                  <td colSpan="7" className="text-center p-10 text-gray-500">
                     <i className="fas fa-inbox text-4xl text-teal-500 mb-3 block"></i>
-                    No vendors found
+                    <div className="text-lg font-semibold">No Data Found</div>
+                    <p className="text-sm mt-2">No vendors available. Add a new vendor to get started.</p>
                   </td>
                 </tr>
               )}
@@ -1422,8 +1488,8 @@ const Vendor = () => {
 
       <ConfirmModal
         isOpen={showConfirmModal}
-        title={deletingVendorId ? 'Delete Vendor' : `Delete ${selectedVendors.length} Vendors`}
-        message={deletingVendorId ? 'Are you sure you want to delete this vendor? This action cannot be undone.' : `Are you sure you want to delete ${selectedVendors.length} vendors? This action cannot be undone.`}
+        title="Delete Vendor"
+        message="Are you sure you want to delete this vendor? This action cannot be undone."
         onConfirm={confirmDelete}
         onCancel={() => {
           setShowConfirmModal(false);
@@ -1431,6 +1497,19 @@ const Vendor = () => {
         }}
         type="warning"
         isDanger={true}
+      />
+
+      <ConfirmModal
+        isOpen={!!toggleStatusVendor}
+        title={toggleStatusVendor?.status === VENDOR_STATUS.ACTIVE ? 'Block Vendor' : 'Activate Vendor'}
+        message={toggleStatusVendor?.status === VENDOR_STATUS.ACTIVE 
+          ? `Are you sure you want to block ${toggleStatusVendor?.companyName}? They will be marked as inactive.`
+          : `Are you sure you want to activate ${toggleStatusVendor?.companyName}? They will be marked as active.`
+        }
+        onConfirm={confirmToggleStatus}
+        onCancel={() => setToggleStatusVendor(null)}
+        type="info"
+        isDanger={false}
       />
 
       <Toast show={toast.show} message={toast.message} type={toast.type} />

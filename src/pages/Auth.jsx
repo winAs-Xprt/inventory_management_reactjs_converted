@@ -24,15 +24,10 @@ const Auth = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [showLoginPassword, setShowLoginPassword] = useState(false);
 
-  const [resetEmail, setResetEmail] = useState('');
+  const [otpEmail, setOtpEmail] = useState('');
 
   const [otpValues, setOtpValues] = useState(['', '', '', '', '', '']);
   const otpInputRefs = useRef([]);
-
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
@@ -137,11 +132,12 @@ const Auth = () => {
     }
   };
 
-  const handleForgotPassword = async (e) => {
+  // NEW: Handle Login with OTP - Send OTP
+  const handleLoginWithOtp = async (e) => {
     e.preventDefault();
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(resetEmail)) {
+    if (!emailRegex.test(otpEmail)) {
       showToast('Please enter a valid email address', 'error');
       return;
     }
@@ -150,8 +146,8 @@ const Auth = () => {
 
     try {
       await new Promise((resolve) => setTimeout(resolve, 1500));
-      setUserEmail(resetEmail);
-      transitionToState('otpVerification');
+      setUserEmail(otpEmail);
+      transitionToState('otpLogin');
       showToast('OTP sent to your email!', 'success');
     } catch (error) {
       showToast('Failed to send OTP. Please try again.', 'error');
@@ -178,7 +174,8 @@ const Auth = () => {
     }
   };
 
-  const handleVerifyOtp = async (e) => {
+  // NEW: Handle OTP Login - Verify OTP and Login
+  const handleVerifyOtpLogin = async (e) => {
     e.preventDefault();
 
     const otp = otpValues.join('');
@@ -191,9 +188,22 @@ const Auth = () => {
 
     try {
       await new Promise((resolve) => setTimeout(resolve, 1500));
-      transitionToState('resetPassword');
-      showToast('OTP verified successfully!', 'success');
+      
+      // Simulate OTP verification and login
+      localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, 'demo_access_token');
+      localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, 'demo_refresh_token');
+      localStorage.setItem(STORAGE_KEYS.IS_LOGGED_IN, 'true');
+      localStorage.setItem(
+        STORAGE_KEYS.USER_DATA,
+        JSON.stringify({ email: userEmail, name: 'User' })
+      );
+
+      showToast('Login successful!', 'success');
       setOtpValues(['', '', '', '', '', '']);
+      
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1000);
     } catch (error) {
       showToast('Invalid OTP. Please try again.', 'error');
     } finally {
@@ -212,47 +222,17 @@ const Auth = () => {
     }
   };
 
-  const handleResetPassword = async (e) => {
-    e.preventDefault();
-
-    if (newPassword.length < 6) {
-      showToast('Password must be at least 6 characters', 'error');
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      showToast('Passwords do not match', 'error');
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      transitionToState('success');
-      showToast('Password reset successful!', 'success');
-    } catch (error) {
-      showToast('Failed to reset password. Please try again.', 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleBackToLogin = () => {
-    setResetEmail('');
+    setOtpEmail('');
     setOtpValues(['', '', '', '', '', '']);
-    setNewPassword('');
-    setConfirmPassword('');
     transitionToState('login');
   };
 
   const renderFormHeader = () => {
     const headers = {
       login: { title: 'Welcome Back', subtitle: 'Sign in to your admin account' },
-      forgotPassword: { title: 'Reset Password', subtitle: 'Enter your email to receive OTP' },
-      otpVerification: { title: 'Verify OTP', subtitle: 'Enter the code sent to your email' },
-      resetPassword: { title: 'Create New Password', subtitle: 'Enter your new password' },
-      success: { title: '', subtitle: '' },
+      loginWithOtp: { title: 'Login with OTP', subtitle: 'Enter your email to receive OTP' },
+      otpLogin: { title: 'Verify OTP', subtitle: 'Enter the code sent to your email' },
     };
 
     const header = headers[currentState];
@@ -358,8 +338,15 @@ const Auth = () => {
                   </div>
                   <span className="auth-remember-label">Remember me</span>
                 </label>
-                <a href="#" className="auth-forgot-password" onClick={(e) => { e.preventDefault(); transitionToState('forgotPassword'); }}>
-                  Forgot Password?
+                <a 
+                  href="#" 
+                  className="auth-forgot-password" 
+                  onClick={(e) => { 
+                    e.preventDefault(); 
+                    transitionToState('loginWithOtp'); 
+                  }}
+                >
+                  Login with OTP
                 </a>
               </div>
 
@@ -385,18 +372,18 @@ const Auth = () => {
             </form>
           )}
 
-          {/* FORGOT PASSWORD FORM */}
-          {currentState === 'forgotPassword' && (
-            <form className="auth-forgot-password-form" onSubmit={handleForgotPassword}>
+          {/* LOGIN WITH OTP FORM - Enter Email */}
+          {currentState === 'loginWithOtp' && (
+            <form className="auth-forgot-password-form" onSubmit={handleLoginWithOtp}>
               <div className="auth-form-group">
-                <label htmlFor="resetEmail" className="auth-form-label">Email Address</label>
+                <label htmlFor="otpEmail" className="auth-form-label">Email Address</label>
                 <input
                   type="email"
-                  id="resetEmail"
+                  id="otpEmail"
                   className="auth-form-input"
                   placeholder="Enter your registered email"
-                  value={resetEmail}
-                  onChange={(e) => setResetEmail(e.target.value)}
+                  value={otpEmail}
+                  onChange={(e) => setOtpEmail(e.target.value)}
                   required
                 />
                 <i className="fas fa-envelope auth-input-icon"></i>
@@ -417,9 +404,9 @@ const Auth = () => {
             </form>
           )}
 
-          {/* OTP VERIFICATION FORM */}
-          {currentState === 'otpVerification' && (
-            <form className="auth-otp-verification-form" onSubmit={handleVerifyOtp}>
+          {/* OTP LOGIN FORM - Verify OTP */}
+          {currentState === 'otpLogin' && (
+            <form className="auth-otp-verification-form" onSubmit={handleVerifyOtpLogin}>
               <div className="auth-otp-info-text">
                 <p>We've sent a 6-digit verification code to</p>
                 <p className="auth-otp-email"><strong>{userEmail}</strong></p>
@@ -456,8 +443,8 @@ const Auth = () => {
               <button type="submit" className={`auth-btn-primary ${isLoading ? 'auth-loading' : ''}`} disabled={isLoading}>
                 <div className="auth-spinner"></div>
                 <span className="auth-button-text">
-                  <i className="fas fa-check-circle"></i>
-                  Verify OTP
+                  <i className="fas fa-sign-in-alt"></i>
+                  Login with OTP
                 </span>
               </button>
 
@@ -466,84 +453,6 @@ const Auth = () => {
                 Back to Login
               </button>
             </form>
-          )}
-
-          {/* RESET PASSWORD FORM */}
-          {currentState === 'resetPassword' && (
-            <form className="auth-reset-password-form" onSubmit={handleResetPassword}>
-              <div className="auth-form-group">
-                <label htmlFor="newPassword" className="auth-form-label">New Password</label>
-                <input
-                  type={showNewPassword ? 'text' : 'password'}
-                  id="newPassword"
-                  className="auth-form-input"
-                  placeholder="Enter new password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
-                />
-                <i className="fas fa-lock auth-input-icon"></i>
-                <button
-                  type="button"
-                  className="auth-password-toggle"
-                  onClick={() => setShowNewPassword(!showNewPassword)}
-                >
-                  <i className={`fas ${showNewPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
-                </button>
-              </div>
-
-              <div className="auth-form-group">
-                <label htmlFor="confirmPassword" className="auth-form-label">Confirm Password</label>
-                <input
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  id="confirmPassword"
-                  className="auth-form-input"
-                  placeholder="Confirm new password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                />
-                <i className="fas fa-lock auth-input-icon"></i>
-                <button
-                  type="button"
-                  className="auth-password-toggle"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  <i className={`fas ${showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
-                </button>
-              </div>
-
-              <button type="submit" className={`auth-btn-primary ${isLoading ? 'auth-loading' : ''}`} disabled={isLoading}>
-                <div className="auth-spinner"></div>
-                <span className="auth-button-text">
-                  <i className="fas fa-key"></i>
-                  Reset Password
-                </span>
-              </button>
-
-              <button type="button" className="auth-btn-secondary" onClick={handleBackToLogin}>
-                <i className="fas fa-arrow-left"></i>
-                Back to Login
-              </button>
-            </form>
-          )}
-
-          {/* SUCCESS MESSAGE */}
-          {currentState === 'success' && (
-            <div className="auth-success-message">
-              <div className="auth-success-icon">
-                <i className="fas fa-check-circle"></i>
-              </div>
-              <h2 className="auth-success-title">Password Changed Successfully</h2>
-              <p className="auth-success-text">
-                Your password has been changed successfully for <strong>{userEmail}</strong>
-              </p>
-              <p className="auth-success-subtext">Kindly log in using your new password.</p>
-              <button type="button" className="auth-btn-secondary auth-success-variant" onClick={handleBackToLogin}>
-                <i className="fas fa-arrow-left"></i>
-                Back to Login
-              </button>
-            </div>
           )}
         </div>
       </div>

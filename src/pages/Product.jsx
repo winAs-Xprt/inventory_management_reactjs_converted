@@ -14,7 +14,8 @@ import {
   getVendorName,
   getStockColor,
   getStockStatus,
-  initializeRackCells
+  initializeRackCells,
+  getStatsCardData
 } from '../data/Productdata';
 
 // ==========================================================================
@@ -90,6 +91,207 @@ const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel, type = 'war
             >
               <i className="fas fa-check"></i>
               Confirm
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ==========================================================================
+// CATEGORY DETAIL VIEW MODAL COMPONENT (NEW)
+// ==========================================================================
+const CategoryDetailModal = ({ isOpen, onClose, category, products }) => {
+  if (!isOpen || !category) return null;
+
+  const categoryProducts = products.filter(p => p.categoryId === category.id);
+  const totalProducts = categoryProducts.length;
+  const totalValue = categoryProducts.reduce((sum, p) => {
+    const price = Object.values(p.vendorPrices || {})[0] || 0;
+    return sum + (price * p.currentQuantity);
+  }, 0);
+
+  const lowStockCount = categoryProducts.filter(p => 
+    p.status === 'low' || p.status === 'critical' || p.status === 'out'
+  ).length;
+
+  const normalStockCount = categoryProducts.filter(p => p.status === 'normal').length;
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-[9999] p-5">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose}></div>
+      <div className="relative w-full max-w-4xl max-h-[90vh] animate-in fade-in duration-300">
+        <div className="bg-white rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+          
+          {/* Modal Header */}
+          <div className="px-6 py-5 border-b-2 border-gray-200 flex justify-between items-center bg-gradient-to-r from-teal-50 to-cyan-50">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-teal-400 to-teal-700 flex items-center justify-center text-white text-2xl shadow-lg">
+                <i className="fas fa-layer-group"></i>
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-gray-800">{category.categoryName}</h2>
+                <p className="text-sm text-gray-600 flex items-center gap-2 mt-1">
+                  <span className="bg-cyan-100 text-teal-600 px-2 py-0.5 rounded text-xs font-semibold">Category ID: #{category.id}</span>
+                  <span className="text-gray-400">•</span>
+                  <span className="text-xs"><i className="fas fa-calendar text-[9px]"></i> Created: {category.created_At}</span>
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="bg-transparent border-none text-gray-500 text-2xl cursor-pointer p-2 rounded-md w-10 h-10 flex items-center justify-center hover:bg-white hover:text-gray-800 transition-all duration-200"
+            >
+              <i className="fas fa-times"></i>
+            </button>
+          </div>
+
+          {/* Modal Body */}
+          <div className="p-6 overflow-y-auto flex-1">
+            
+            {/* Category Statistics */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-lg bg-blue-500 flex items-center justify-center text-white">
+                    <i className="fas fa-box text-xl"></i>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-gray-800">{totalProducts}</div>
+                    <div className="text-xs text-gray-600">Total Products</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-lg bg-green-500 flex items-center justify-center text-white">
+                    <i className="fas fa-check-circle text-xl"></i>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-gray-800">{normalStockCount}</div>
+                    <div className="text-xs text-gray-600">Normal Stock</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl p-4 border border-yellow-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-lg bg-yellow-500 flex items-center justify-center text-white">
+                    <i className="fas fa-exclamation-triangle text-xl"></i>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-gray-800">{lowStockCount}</div>
+                    <div className="text-xs text-gray-600">Low Stock</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-lg bg-purple-500 flex items-center justify-center text-white">
+                    <i className="fas fa-rupee-sign text-xl"></i>
+                  </div>
+                  <div>
+                    <div className="text-xl font-bold text-gray-800">₹{totalValue.toLocaleString('en-IN')}</div>
+                    <div className="text-xs text-gray-600">Total Value</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Products in Category */}
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <div className="px-5 py-4 bg-gray-50 border-b border-gray-200">
+                <h3 className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                  <i className="fas fa-boxes text-teal-500"></i>
+                  Products in this Category ({totalProducts})
+                </h3>
+              </div>
+              
+              {totalProducts > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase">Product</th>
+                        <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase">SKU</th>
+                        <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase">Stock</th>
+                        <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase">Status</th>
+                        <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase">Location</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {categoryProducts.map(product => (
+                        <tr key={product.id} className="border-b border-gray-200 hover:bg-cyan-50 transition-all">
+                          <td className="p-3">
+                            <div className="flex items-center gap-3">
+                              <img
+                                src={product.productImage}
+                                alt={product.productName}
+                                className="w-10 h-10 object-cover rounded-md border border-gray-200"
+                                onError={(e) => e.target.src = 'https://via.placeholder.com/40?text=No+Image'}
+                              />
+                              <div>
+                                <div className="font-semibold text-gray-800 text-sm">{product.productName}</div>
+                                <div className="text-xs text-gray-500">{product.brand}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">{product.productCode}</code>
+                          </td>
+                          <td className="p-3">
+                            <span className={`font-bold ${getStockColor(product.status)}`}>
+                              {product.currentQuantity} {product.unitOfMeasurement}
+                            </span>
+                          </td>
+                          <td className="p-3">
+                            <span className={`py-1 px-2 rounded text-xs font-bold uppercase ${
+                              product.status === 'normal' ? 'bg-green-50 text-green-600' :
+                              product.status === 'low' ? 'bg-yellow-50 text-yellow-600' :
+                              product.status === 'critical' ? 'bg-orange-50 text-orange-600' :
+                              'bg-red-50 text-red-600'
+                            }`}>
+                              {product.status}
+                            </span>
+                          </td>
+                          <td className="p-3">
+                            <span className="bg-blue-50 text-blue-600 px-2 py-1 rounded text-xs font-bold">
+                              <i className="fas fa-map-marker-alt text-[9px]"></i> {product.rackLocation}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="p-10 text-center">
+                  <i className="fas fa-inbox text-4xl text-gray-400 mb-3 block"></i>
+                  <h4 className="text-lg font-semibold text-gray-700 mb-2">No Products Found</h4>
+                  <p className="text-sm text-gray-500">This category doesn't have any products yet.</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Modal Footer */}
+          <div className="flex gap-3 px-6 py-5 border-t-2 border-gray-200 bg-gray-50">
+            <button
+              onClick={onClose}
+              className="flex-1 px-5 py-3 bg-gray-100 text-gray-700 border border-gray-300 rounded-md text-sm font-semibold cursor-pointer hover:bg-white transition-all duration-200 flex items-center justify-center gap-2"
+            >
+              <i className="fas fa-times"></i>
+              Close
+            </button>
+            <button
+              onClick={() => window.print()}
+              className="flex-1 px-5 py-3 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-md text-sm font-semibold cursor-pointer hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+            >
+              <i className="fas fa-print"></i>
+              Print Details
             </button>
           </div>
         </div>
@@ -1286,6 +1488,7 @@ const CategoryModal = ({ isOpen, onClose, category, onSave }) => {
             <form onSubmit={handleSubmit}>
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-gray-600">
+                  <i className="fas fa-tag text-teal-500 mr-1.5"></i>
                   Category Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -1316,7 +1519,7 @@ const CategoryModal = ({ isOpen, onClose, category, onSave }) => {
               onClick={handleSubmit}
               className="flex-1 px-5 py-3 bg-teal-500 text-white rounded-md text-sm font-semibold cursor-pointer hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
             >
-              <i className="fas fa-plus"></i>
+              <i className="fas fa-check-circle"></i>
               {category ? 'Update' : 'Add'} Category
             </button>
           </div>
@@ -1344,9 +1547,12 @@ const Product = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [editingCategory, setEditingCategory] = useState(null);
 
-  // NEW: Add these states for View Modal
   const [viewingProduct, setViewingProduct] = useState(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+
+  // NEW: Category View Modal State
+  const [viewingCategory, setViewingCategory] = useState(null);
+  const [isCategoryViewModalOpen, setIsCategoryViewModalOpen] = useState(false);
 
   // Filters
   const [filters, setFilters] = useState({
@@ -1387,16 +1593,17 @@ const Product = () => {
   }, [categories, currentCategoryPage]);
 
   // Statistics
-  const stats = useMemo(() => calculateProductStats(products), [products]);
+  const statsCardData = useMemo(() => 
+    getStatsCardData(products, categories), 
+    [products, categories]
+  );
 
   // Add/Edit Product
   const handleSaveProduct = (productData) => {
     if (editingProduct) {
-      // Update existing product
       setProducts(products.map(p => p.id === editingProduct.id ? { ...productData, id: p.id, updated_At: new Date().toISOString().split('T')[0] } : p));
       showToast('Product updated successfully', 'success');
     } else {
-      // Add new product
       const newProduct = {
         ...productData,
         id: Math.max(...products.map(p => p.id), 0) + 1,
@@ -1533,7 +1740,7 @@ const Product = () => {
         onSave={handleSaveCategory}
       />
 
-      {/* NEW: Product Detail View Modal */}
+      {/* Product Detail View Modal */}
       <ProductDetailModal
         isOpen={isViewModalOpen}
         onClose={() => {
@@ -1545,15 +1752,26 @@ const Product = () => {
         vendors={vendors}
       />
 
+      {/* Category Detail View Modal (NEW) */}
+      <CategoryDetailModal
+        isOpen={isCategoryViewModalOpen}
+        onClose={() => {
+          setIsCategoryViewModalOpen(false);
+          setViewingCategory(null);
+        }}
+        category={viewingCategory}
+        products={products}
+      />
+
       {/* Page Header */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex-1">
             <h1 className="text-2xl font-extrabold bg-gradient-to-r from-teal-400 to-teal-700 bg-clip-text text-transparent mb-1">
-              Product Management
+              Product Inventory Management System
             </h1>
             <p className="text-sm text-gray-600">
-              Manage inventory products with comprehensive details, auto PO, rack locations, and real-time monitoring.
+              Comprehensive product catalog with vendor mapping, auto PO, rack locations, and real-time monitoring
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -1561,14 +1779,14 @@ const Product = () => {
               onClick={() => setIsCategoryModalOpen(true)}
               className="px-4 py-2.5 bg-white text-teal-600 border-2 border-teal-600 rounded-md text-sm font-semibold hover:bg-teal-600 hover:text-white transition-all duration-200 flex items-center gap-2"
             >
-              <i className="fas fa-layer-group"></i>
+              <i className="fas fa-plus-circle"></i>
               Add Category
             </button>
             <button
               onClick={() => setIsProductModalOpen(true)}
               className="px-4 py-2.5 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-md text-sm font-semibold hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 flex items-center gap-2"
             >
-              <i className="fas fa-plus"></i>
+              <i className="fas fa-plus-circle"></i>
               Add Product
             </button>
             <button
@@ -1582,7 +1800,7 @@ const Product = () => {
               onClick={() => showToast('Data refreshed', 'success')}
               className="px-4 py-2.5 bg-gradient-to-r from-teal-400 to-teal-700 text-white rounded-md text-sm font-semibold hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 flex items-center gap-2"
             >
-              <i className="fas fa-refresh"></i>
+              <i className="fas fa-sync-alt"></i>
               Refresh
             </button>
           </div>
@@ -1591,41 +1809,23 @@ const Product = () => {
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard
-          icon="fa-box"
-          title="Total Products"
-          value={stats.totalProducts}
-          change="+5 This week"
-          changeType="positive"
-        />
-        <StatCard
-          icon="fa-tags"
-          title="Total Categories"
-          value={categories.length}
-          change="All Active"
-          changeType="positive"
-        />
-        <StatCard
-          icon="fa-exclamation-triangle"
-          title="Low Stock Items"
-          value={stats.lowStockItems}
-          change="Needs Attention"
-          changeType="warning"
-        />
-        <StatCard
-          icon="fa-box"
-          title="Total Value"
-          value={`₹${stats.totalValue.toLocaleString('en-IN')}`}
-          change="Inventory Worth"
-          changeType="positive"
-        />
+        {statsCardData.map((stat, index) => (
+          <StatCard
+            key={index}
+            icon={stat.icon}
+            title={stat.title}
+            value={stat.value}
+            change={stat.change}
+            changeType={stat.changeType}
+          />
+        ))}
       </div>
 
       {/* Filters Section */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
         <h3 className="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
           <i className="fas fa-filter text-teal-500"></i>
-          Filters
+          Advanced Filters
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
@@ -1634,7 +1834,7 @@ const Product = () => {
               type="text"
               value={filters.search}
               onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-              placeholder="Search by name, code..."
+              placeholder="Search by name, code, SKU, brand..."
               className="w-full py-2 px-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all"
             />
           </div>
@@ -1660,7 +1860,7 @@ const Product = () => {
               onChange={(e) => setFilters({ ...filters, vendorId: e.target.value })}
               className="w-full py-2 px-3 border-2 border-gray-200 rounded-md text-sm focus:outline-none focus:border-teal-400 focus:ring-4 focus:ring-cyan-100 transition-all cursor-pointer"
             >
-              <option value="">Select Vendor</option>
+              <option value="">All Vendors</option>
               {vendors.map(v => (
                 <option key={v.id} value={v.id}>{v.vendorName}</option>
               ))}
@@ -1731,28 +1931,28 @@ const Product = () => {
         <div className="px-5 py-4 border-b border-gray-200 bg-gray-50">
           <h3 className="text-sm font-bold text-gray-700 flex items-center gap-2">
             <i className="fas fa-list text-teal-500"></i>
-            Product Inventory Management
+            Product Inventory List ({filteredProducts.length} items)
           </h3>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1400px]">
+          <table className="w-full min-w-[1600px]">
             <thead className="bg-gray-50 border-b-2 border-gray-200">
               <tr>
                 <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase w-16">Image</th>
-                <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase min-w-[180px]">Product Name</th>
+                <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase min-w-[180px]">Product Details</th>
                 <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase min-w-[120px]">Category</th>
-                <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase min-w-[110px]">SKU/Code</th>
-                <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase w-24">Stock</th>
-                <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase w-20">Min</th>
+                <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase min-w-[110px]">SKU Code</th>
+                <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase w-24">Current Stock</th>
+                <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase w-20">Min Qty</th>
                 <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase w-20">Unit</th>
-                <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase w-24">Price</th>
-                <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase min-w-[140px]">Vendors</th>
-                <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase min-w-[100px]">Rack</th>
+                <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase w-24">Base Price</th>
+                <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase min-w-[140px]">Vendor Details</th>
+                <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase min-w-[100px]">Storage Location</th>
                 <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase w-20">Auto PO</th>
                 <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase w-20">Scrap</th>
-                <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase w-24">Status</th>
-                <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase w-24">Updated</th>
+                <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase w-24">Stock Status</th>
+                <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase w-24">Last Updated</th>
                 <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase w-32">Actions</th>
               </tr>
             </thead>
@@ -1809,8 +2009,8 @@ const Product = () => {
                       </td>
                       <td className="p-3">
                         <span className="text-blue-600 font-semibold text-xs">
-                          <i className="fas fa-arrow-down text-[9px]"></i>
-                          ₹{Object.values(product.vendorPrices || {})[0]?.toLocaleString('en-IN') || 'N/A'}
+                          <i className="fas fa-rupee-sign text-[9px]"></i>
+                          {Object.values(product.vendorPrices || {})[0]?.toLocaleString('en-IN') || 'N/A'}
                         </span>
                       </td>
                       <td className="p-3">
@@ -1861,14 +2061,13 @@ const Product = () => {
                       </td>
                       <td className="p-3">
                         <div className="flex gap-1.5">
-                          {/* UPDATED: View button now opens modal */}
                           <button
                             onClick={() => {
                               setViewingProduct(product);
                               setIsViewModalOpen(true);
                             }}
                             className="w-8 h-8 bg-blue-500 text-white rounded-md text-xs hover:-translate-y-px hover:shadow-md transition-all flex items-center justify-center"
-                            title="View Details"
+                            title="View Product Details"
                           >
                             <i className="fas fa-eye text-xs"></i>
                           </button>
@@ -1946,11 +2145,11 @@ const Product = () => {
         )}
       </div>
 
-      {/* Category Management Table */}
+      {/* Category Management Table - UPDATED WITH VIEW BUTTON */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="px-5 py-4 border-b border-gray-200 bg-gray-50">
           <h3 className="text-sm font-bold text-gray-700 flex items-center gap-2">
-            <i className="fas fa-tags text-teal-500"></i>
+            <i className="fas fa-layer-group text-teal-500"></i>
             Category Management
           </h3>
         </div>
@@ -1963,7 +2162,7 @@ const Product = () => {
                 <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase min-w-[200px]">Category Name</th>
                 <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase min-w-[150px]">Products Count</th>
                 <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase min-w-[120px]">Created Date</th>
-                <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase w-32">Actions</th>
+                <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase w-40">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -1975,10 +2174,16 @@ const Product = () => {
                       <div className="font-bold text-gray-700">#{category.id}</div>
                     </td>
                     <td className="p-3">
-                      <div className="font-semibold text-gray-800 text-sm">{category.categoryName}</div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-teal-400 to-teal-700 flex items-center justify-center text-white">
+                          <i className="fas fa-layer-group"></i>
+                        </div>
+                        <div className="font-semibold text-gray-800 text-sm">{category.categoryName}</div>
+                      </div>
                     </td>
                     <td className="p-3">
                       <span className="inline-block bg-teal-50 text-teal-600 px-3 py-1 rounded-md text-xs font-semibold border border-teal-200">
+                        <i className="fas fa-boxes text-[10px] mr-1"></i>
                         {productsCount} Product{productsCount !== 1 ? 's' : ''}
                       </span>
                     </td>
@@ -1989,6 +2194,16 @@ const Product = () => {
                     </td>
                     <td className="p-3">
                       <div className="flex gap-1.5">
+                        <button
+                          onClick={() => {
+                            setViewingCategory(category);
+                            setIsCategoryViewModalOpen(true);
+                          }}
+                          className="w-8 h-8 bg-blue-500 text-white rounded-md text-xs hover:-translate-y-px hover:shadow-md transition-all flex items-center justify-center"
+                          title="View Category Details"
+                        >
+                          <i className="fas fa-eye text-xs"></i>
+                        </button>
                         <button
                           onClick={() => {
                             setEditingCategory(category);
