@@ -20,7 +20,9 @@ export const DUMMY_VENDORS = [
     lastOrderDate: '2025-12-20',
     totalOrders: 45,
     avatar: 'AB',
-    avatarColor: '#17a2b8'
+    avatarColor: '#17a2b8',
+    whatsappSameAsPhone: true,
+    whatsappNumber: '9876543210'
   },
   {
     id: 2,
@@ -38,7 +40,9 @@ export const DUMMY_VENDORS = [
     lastOrderDate: '2025-12-18',
     totalOrders: 32,
     avatar: 'XY',
-    avatarColor: '#fd7e14'
+    avatarColor: '#fd7e14',
+    whatsappSameAsPhone: true,
+    whatsappNumber: '9876543211'
   },
   {
     id: 3,
@@ -56,7 +60,9 @@ export const DUMMY_VENDORS = [
     lastOrderDate: '2025-12-22',
     totalOrders: 28,
     avatar: 'GT',
-    avatarColor: '#20c997'
+    avatarColor: '#20c997',
+    whatsappSameAsPhone: true,
+    whatsappNumber: '9876543212'
   },
   {
     id: 4,
@@ -74,7 +80,9 @@ export const DUMMY_VENDORS = [
     lastOrderDate: '2025-12-15',
     totalOrders: 38,
     avatar: 'PV',
-    avatarColor: '#28a745'
+    avatarColor: '#28a745',
+    whatsappSameAsPhone: true,
+    whatsappNumber: '9876543213'
   },
   {
     id: 5,
@@ -92,7 +100,9 @@ export const DUMMY_VENDORS = [
     lastOrderDate: '2025-11-30',
     totalOrders: 15,
     avatar: 'ES',
-    avatarColor: '#e83e8c'
+    avatarColor: '#e83e8c',
+    whatsappSameAsPhone: true,
+    whatsappNumber: '9876543214'
   },
   {
     id: 6,
@@ -110,7 +120,9 @@ export const DUMMY_VENDORS = [
     lastOrderDate: '2025-12-21',
     totalOrders: 41,
     avatar: 'MI',
-    avatarColor: '#fd7e14'
+    avatarColor: '#fd7e14',
+    whatsappSameAsPhone: true,
+    whatsappNumber: '9876543215'
   },
   {
     id: 7,
@@ -128,7 +140,9 @@ export const DUMMY_VENDORS = [
     lastOrderDate: '2025-12-19',
     totalOrders: 25,
     avatar: 'UP',
-    avatarColor: '#a8dadc'
+    avatarColor: '#a8dadc',
+    whatsappSameAsPhone: false,
+    whatsappNumber: '9876543299'
   },
   {
     id: 8,
@@ -146,7 +160,9 @@ export const DUMMY_VENDORS = [
     lastOrderDate: '2025-12-23',
     totalOrders: 52,
     avatar: 'RH',
-    avatarColor: '#6f42c1'
+    avatarColor: '#6f42c1',
+    whatsappSameAsPhone: true,
+    whatsappNumber: '9876543217'
   }
 ];
 
@@ -209,6 +225,12 @@ export const DUMMY_STATISTICS_DATA = {
 // UTILITY FUNCTIONS
 // ==========================================================================
 
+/**
+ * Calculate vendor statistics from vendor data
+ * @param {Array} vendors - Array of vendor objects
+ * @param {Object} apiStats - Optional API statistics data
+ * @returns {Object} Calculated statistics
+ */
 export const calculateVendorStats = (vendors, apiStats = null) => {
   if (apiStats) {
     return {
@@ -275,6 +297,12 @@ export const calculateVendorStats = (vendors, apiStats = null) => {
   };
 };
 
+/**
+ * Filter vendors based on search and filter criteria
+ * @param {Array} vendors - Array of vendor objects
+ * @param {Object} filters - Filter criteria
+ * @returns {Array} Filtered vendors
+ */
 export const getFilteredVendors = (vendors, filters = {}) => {
   const { searchValue = '', filterStatus = '', filterType = '' } = filters;
   
@@ -297,6 +325,11 @@ export const getFilteredVendors = (vendors, filters = {}) => {
   });
 };
 
+/**
+ * Validate vendor form data
+ * @param {Object} vendorData - Vendor form data
+ * @returns {Object} Validation result with errors array
+ */
 export const validateVendorData = (vendorData) => {
   const errors = [];
   
@@ -308,30 +341,37 @@ export const validateVendorData = (vendorData) => {
     errors.push('Company name must be at least 3 characters long');
   }
   
-  if (!vendorData.contact || vendorData.contact.length !== 10) {
-    errors.push('Contact number must be 10 digits');
-  } else if (!['6', '7', '8', '9'].includes(vendorData.contact.charAt(0))) {
-    errors.push('Contact number must start with 6, 7, 8 or 9');
+  if (vendorData.contact && vendorData.contact.length > 0) {
+    const cleanContact = vendorData.contact.replace('+91 ', '').replace(/\s/g, '');
+    if (cleanContact.length !== 10) {
+      errors.push('Contact number must be 10 digits');
+    } else if (!['6', '7', '8', '9'].includes(cleanContact.charAt(0))) {
+      errors.push('Contact number must start with 6, 7, 8 or 9');
+    }
   }
   
-  const emailRegex = /^[^\s@]+@[^\s@]+\.(com|in|org|net|co\.in)$/i;
-  if (!vendorData.email || !emailRegex.test(vendorData.email)) {
-    errors.push('Invalid email format');
+  if (vendorData.email && vendorData.email.trim().length > 0) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.(com|in|org|net|co\.in)$/i;
+    if (!emailRegex.test(vendorData.email)) {
+      errors.push('Invalid email format');
+    }
   }
   
-  if (!vendorData.address || vendorData.address.trim().length < 10) {
+  if (vendorData.address && vendorData.address.trim().length > 0 && vendorData.address.trim().length < 10) {
     errors.push('Address must be at least 10 characters long');
   }
   
-  if (!vendorData.pincode || vendorData.pincode.length !== 6 || vendorData.pincode.charAt(0) === '0') {
-    errors.push('Invalid pincode format');
+  if (vendorData.pincode && vendorData.pincode.length > 0) {
+    if (vendorData.pincode.length !== 6 || vendorData.pincode.charAt(0) === '0') {
+      errors.push('Invalid pincode format');
+    }
   }
   
-  if (!vendorData.city || vendorData.city.trim().length < 2) {
+  if (vendorData.city && vendorData.city.trim().length > 0 && vendorData.city.trim().length < 2) {
     errors.push('City name must be at least 2 characters long');
   }
   
-  if (!vendorData.state || vendorData.state.trim().length < 2) {
+  if (vendorData.state && vendorData.state.trim().length > 0 && vendorData.state.trim().length < 2) {
     errors.push('State name must be at least 2 characters long');
   }
   
@@ -352,10 +392,16 @@ export const validateVendorData = (vendorData) => {
   };
 };
 
+/**
+ * Generate avatar initials and color for vendor
+ * @param {String} companyName - Company name
+ * @returns {Object} Avatar data with initials and color
+ */
 export const generateVendorAvatar = (companyName) => {
   const colors = [
     '#17a2b8', '#fd7e14', '#20c997', '#28a745', 
-    '#e83e8c', '#6f42c1', '#a8dadc', '#457b9d'
+    '#e83e8c', '#6f42c1', '#a8dadc', '#457b9d',
+    '#f77f00', '#06d6a0', '#118ab2', '#ef476f'
   ];
   
   const initials = companyName
@@ -373,6 +419,49 @@ export const generateVendorAvatar = (companyName) => {
   };
 };
 
+/**
+ * Format phone number to display format
+ * @param {String} phone - Phone number
+ * @returns {String} Formatted phone number
+ */
+export const formatPhoneNumber = (phone) => {
+  if (!phone) return '';
+  const cleaned = phone.replace(/\D/g, '');
+  if (cleaned.length === 10) {
+    return `+91 ${cleaned}`;
+  }
+  return phone;
+};
+
+/**
+ * Format date to readable format
+ * @param {String} dateString - ISO date string
+ * @returns {String} Formatted date
+ */
+export const formatDate = (dateString) => {
+  if (!dateString) return 'N/A';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-IN', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+};
+
+/**
+ * Calculate days since last order
+ * @param {String} lastOrderDate - Last order date
+ * @returns {Number} Days since last order
+ */
+export const daysSinceLastOrder = (lastOrderDate) => {
+  if (!lastOrderDate) return null;
+  const lastOrder = new Date(lastOrderDate);
+  const today = new Date();
+  const diffTime = Math.abs(today - lastOrder);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays;
+};
+
 // ==========================================================================
 // CONSTANTS
 // ==========================================================================
@@ -384,12 +473,131 @@ export const VENDOR_TYPES = {
 };
 
 export const VENDOR_TYPE_OPTIONS = [
-  { value: VENDOR_TYPES.PURCHASE, label: 'Purchase Vendor', icon: 'fa-shopping-cart' },
-  { value: VENDOR_TYPES.MAINTENANCE, label: 'Maintenance Partner', icon: 'fa-tools' },
-  { value: VENDOR_TYPES.SCRAP, label: 'Scrap Disposal Partner', icon: 'fa-recycle' }
+  { 
+    value: VENDOR_TYPES.PURCHASE, 
+    label: 'Purchase Vendor', 
+    icon: 'fa-shopping-cart',
+    color: '#17a2b8' 
+  },
+  { 
+    value: VENDOR_TYPES.MAINTENANCE, 
+    label: 'Maintenance Partner', 
+    icon: 'fa-tools',
+    color: '#fd7e14' 
+  },
+  { 
+    value: VENDOR_TYPES.SCRAP, 
+    label: 'Scrap Disposal Partner', 
+    icon: 'fa-recycle',
+    color: '#6f42c1' 
+  }
 ];
 
 export const VENDOR_STATUS = {
   ACTIVE: 'active',
   INACTIVE: 'inactive'
 };
+
+export const VENDOR_STATUS_OPTIONS = [
+  { 
+    value: VENDOR_STATUS.ACTIVE, 
+    label: 'Active', 
+    color: '#28a745',
+    icon: 'fa-check-circle' 
+  },
+  { 
+    value: VENDOR_STATUS.INACTIVE, 
+    label: 'Inactive', 
+    color: '#dc3545',
+    icon: 'fa-ban' 
+  }
+];
+
+// ==========================================================================
+// INDIAN STATES AND UNION TERRITORIES
+// ==========================================================================
+export const INDIAN_STATES = [
+  'Andhra Pradesh',
+  'Arunachal Pradesh',
+  'Assam',
+  'Bihar',
+  'Chhattisgarh',
+  'Goa',
+  'Gujarat',
+  'Haryana',
+  'Himachal Pradesh',
+  'Jharkhand',
+  'Karnataka',
+  'Kerala',
+  'Madhya Pradesh',
+  'Maharashtra',
+  'Manipur',
+  'Meghalaya',
+  'Mizoram',
+  'Nagaland',
+  'Odisha',
+  'Punjab',
+  'Rajasthan',
+  'Sikkim',
+  'Tamil Nadu',
+  'Telangana',
+  'Tripura',
+  'Uttar Pradesh',
+  'Uttarakhand',
+  'West Bengal',
+  'Andaman and Nicobar Islands',
+  'Chandigarh',
+  'Dadra and Nagar Haveli and Daman and Diu',
+  'Delhi',
+  'Jammu and Kashmir',
+  'Ladakh',
+  'Lakshadweep',
+  'Puducherry'
+];
+
+// ==========================================================================
+// EXPORT FORMATS
+// ==========================================================================
+export const EXPORT_FORMATS = {
+  CSV: 'csv',
+  EXCEL: 'excel',
+  PDF: 'pdf',
+  JSON: 'json'
+};
+
+// ==========================================================================
+// SORT OPTIONS
+// ==========================================================================
+export const SORT_OPTIONS = [
+  { value: 'name_asc', label: 'Name (A-Z)', field: 'companyName', order: 'asc' },
+  { value: 'name_desc', label: 'Name (Z-A)', field: 'companyName', order: 'desc' },
+  { value: 'orders_desc', label: 'Orders (High to Low)', field: 'totalOrders', order: 'desc' },
+  { value: 'orders_asc', label: 'Orders (Low to High)', field: 'totalOrders', order: 'asc' },
+  { value: 'date_desc', label: 'Recent Orders First', field: 'lastOrderDate', order: 'desc' },
+  { value: 'date_asc', label: 'Oldest Orders First', field: 'lastOrderDate', order: 'asc' }
+];
+
+// ==========================================================================
+// DEFAULT VALUES
+// ==========================================================================
+export const DEFAULT_VENDOR = {
+  vendorName: '',
+  companyName: '',
+  contact: '',
+  whatsappSameAsPhone: true,
+  whatsappNumber: '',
+  email: '',
+  address: '',
+  pincode: '',
+  city: '',
+  state: '',
+  gst: '',
+  status: VENDOR_STATUS.ACTIVE,
+  vendorType: [],
+  totalOrders: 0,
+  lastOrderDate: new Date().toISOString().split('T')[0]
+};
+
+export const PAGINATION_OPTIONS = [5, 10, 20, 50, 100];
+
+export const DEFAULT_ITEMS_PER_PAGE = 10;
