@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 
+
 const STORAGE_KEYS = {
   ACCESS_TOKEN: 'access_token',
   REFRESH_TOKEN: 'refresh_token',
@@ -12,24 +13,35 @@ const STORAGE_KEYS = {
   SAVED_EMAIL: 'savedEmail',
 };
 
+
 const Auth = () => {
   const navigate = useNavigate();
+
 
   const [currentState, setCurrentState] = useState('login');
   const [isLoading, setIsLoading] = useState(false);
   const [userEmail, setUserEmail] = useState('');
+
 
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showLoginPassword, setShowLoginPassword] = useState(false);
 
+
   const [otpEmail, setOtpEmail] = useState('');
+
 
   const [otpValues, setOtpValues] = useState(['', '', '', '', '', '']);
   const otpInputRefs = useRef([]);
 
+  // NEW: State for password login OTP verification
+  const [passwordLoginOtpValues, setPasswordLoginOtpValues] = useState(['', '', '', '', '', '']);
+  const passwordLoginOtpInputRefs = useRef([]);
+
+
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+
 
   // Load Lottie Script
   useEffect(() => {
@@ -38,12 +50,14 @@ const Auth = () => {
     script.type = 'module';
     document.head.appendChild(script);
 
+
     return () => {
       if (document.head.contains(script)) {
         document.head.removeChild(script);
       }
     };
   }, []);
+
 
   useEffect(() => {
     AOS.init({
@@ -53,10 +67,12 @@ const Auth = () => {
       offset: 50,
     });
 
+
     const accessToken = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
     if (accessToken) {
       navigate('/dashboard');
     }
+
 
     const savedRememberMe = localStorage.getItem(STORAGE_KEYS.REMEMBER_ME) === 'true';
     if (savedRememberMe) {
@@ -68,12 +84,14 @@ const Auth = () => {
     }
   }, [navigate]);
 
+
   const showToast = (message, type = 'success') => {
     setToast({ show: true, message, type });
     setTimeout(() => {
       setToast({ show: false, message: '', type: 'success' });
     }, 3000);
   };
+
 
   const transitionToState = (newState) => {
     setCurrentState(newState);
@@ -82,8 +100,11 @@ const Auth = () => {
     }, 100);
   };
 
+
+  // MODIFIED: Handle Login - Now sends OTP after credential validation
   const handleLogin = async (e) => {
     e.preventDefault();
+
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(loginEmail)) {
@@ -91,37 +112,27 @@ const Auth = () => {
       return;
     }
 
+
     if (!loginPassword) {
       showToast('Please enter your password', 'error');
       return;
     }
 
+
     setIsLoading(true);
+
 
     try {
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
+
+      // Validate credentials first
       if (loginEmail === 'admin@gmail.com' && loginPassword === 'Admin@123') {
-        localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, 'demo_access_token');
-        localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, 'demo_refresh_token');
-        localStorage.setItem(STORAGE_KEYS.IS_LOGGED_IN, 'true');
-        localStorage.setItem(
-          STORAGE_KEYS.USER_DATA,
-          JSON.stringify({ email: loginEmail, name: 'Admin' })
-        );
-
-        if (rememberMe) {
-          localStorage.setItem(STORAGE_KEYS.REMEMBER_ME, 'true');
-          localStorage.setItem(STORAGE_KEYS.SAVED_EMAIL, loginEmail);
-        } else {
-          localStorage.removeItem(STORAGE_KEYS.REMEMBER_ME);
-          localStorage.removeItem(STORAGE_KEYS.SAVED_EMAIL);
-        }
-
-        showToast('Login successful!', 'success');
-        setTimeout(() => {
-          navigate('/dashboard');
-        }, 1000);
+        // NEW: Instead of logging in directly, send OTP and transition to OTP verification
+        setUserEmail(loginEmail);
+        setPasswordLoginOtpValues(['', '', '', '', '', '']);
+        transitionToState('passwordLoginOtp');
+        showToast('OTP sent to your email for verification!', 'success');
       } else {
         throw new Error('Invalid credentials');
       }
@@ -132,9 +143,106 @@ const Auth = () => {
     }
   };
 
-  // NEW: Handle Login with OTP - Send OTP
+
+  // NEW: Handle Password Login OTP Change
+  const handlePasswordLoginOtpChange = (index, value) => {
+    if (!/^\d*$/.test(value)) return;
+
+
+    const newOtpValues = [...passwordLoginOtpValues];
+    newOtpValues[index] = value;
+    setPasswordLoginOtpValues(newOtpValues);
+
+
+    if (value && index < 5) {
+      passwordLoginOtpInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+
+  // NEW: Handle Password Login OTP KeyDown
+  const handlePasswordLoginOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !passwordLoginOtpValues[index] && index > 0) {
+      passwordLoginOtpInputRefs.current[index - 1]?.focus();
+    }
+  };
+
+
+  // NEW: Verify OTP and Complete Password Login
+  const handleVerifyPasswordLoginOtp = async (e) => {
+    e.preventDefault();
+
+
+    const otp = passwordLoginOtpValues.join('');
+    if (otp.length !== 6) {
+      showToast('Please enter complete OTP', 'error');
+      return;
+    }
+
+
+    setIsLoading(true);
+
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      
+      // After OTP verification, complete the login
+      localStorage.setItem(STORAGE_KEYS.ACCESS_TOKEN, 'demo_access_token');
+      localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, 'demo_refresh_token');
+      localStorage.setItem(STORAGE_KEYS.IS_LOGGED_IN, 'true');
+      localStorage.setItem(
+        STORAGE_KEYS.USER_DATA,
+        JSON.stringify({ email: loginEmail, name: 'Admin' })
+      );
+
+
+      if (rememberMe) {
+        localStorage.setItem(STORAGE_KEYS.REMEMBER_ME, 'true');
+        localStorage.setItem(STORAGE_KEYS.SAVED_EMAIL, loginEmail);
+      } else {
+        localStorage.removeItem(STORAGE_KEYS.REMEMBER_ME);
+        localStorage.removeItem(STORAGE_KEYS.SAVED_EMAIL);
+      }
+
+
+      showToast('Login successful!', 'success');
+      setPasswordLoginOtpValues(['', '', '', '', '', '']);
+      
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1000);
+    } catch (error) {
+      showToast('Invalid OTP. Please try again.', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
+  // NEW: Resend OTP for Password Login
+  const handleResendPasswordLoginOtp = async () => {
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      showToast('OTP resent successfully!', 'success');
+      setPasswordLoginOtpValues(['', '', '', '', '', '']);
+      passwordLoginOtpInputRefs.current[0]?.focus();
+    } catch (error) {
+      showToast('Failed to resend OTP', 'error');
+    }
+  };
+
+
+  // NEW: Back to Login from Password Login OTP
+  const handleBackToLoginFromPasswordOtp = () => {
+    setPasswordLoginOtpValues(['', '', '', '', '', '']);
+    transitionToState('login');
+  };
+
+
+  // Handle Login with OTP - Send OTP
   const handleLoginWithOtp = async (e) => {
     e.preventDefault();
+
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(otpEmail)) {
@@ -142,7 +250,9 @@ const Auth = () => {
       return;
     }
 
+
     setIsLoading(true);
+
 
     try {
       await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -156,17 +266,21 @@ const Auth = () => {
     }
   };
 
+
   const handleOtpChange = (index, value) => {
     if (!/^\d*$/.test(value)) return;
+
 
     const newOtpValues = [...otpValues];
     newOtpValues[index] = value;
     setOtpValues(newOtpValues);
 
+
     if (value && index < 5) {
       otpInputRefs.current[index + 1]?.focus();
     }
   };
+
 
   const handleOtpKeyDown = (index, e) => {
     if (e.key === 'Backspace' && !otpValues[index] && index > 0) {
@@ -174,9 +288,11 @@ const Auth = () => {
     }
   };
 
-  // NEW: Handle OTP Login - Verify OTP and Login
+
+  // Handle OTP Login - Verify OTP and Login
   const handleVerifyOtpLogin = async (e) => {
     e.preventDefault();
+
 
     const otp = otpValues.join('');
     if (otp.length !== 6) {
@@ -184,7 +300,9 @@ const Auth = () => {
       return;
     }
 
+
     setIsLoading(true);
+
 
     try {
       await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -197,6 +315,7 @@ const Auth = () => {
         STORAGE_KEYS.USER_DATA,
         JSON.stringify({ email: userEmail, name: 'User' })
       );
+
 
       showToast('Login successful!', 'success');
       setOtpValues(['', '', '', '', '', '']);
@@ -211,6 +330,7 @@ const Auth = () => {
     }
   };
 
+
   const handleResendOtp = async () => {
     try {
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -222,21 +342,26 @@ const Auth = () => {
     }
   };
 
+
   const handleBackToLogin = () => {
     setOtpEmail('');
     setOtpValues(['', '', '', '', '', '']);
     transitionToState('login');
   };
 
+
   const renderFormHeader = () => {
     const headers = {
       login: { title: 'Welcome Back', subtitle: 'Sign in to your admin account' },
+      passwordLoginOtp: { title: 'Verify OTP', subtitle: 'Enter the OTP sent to your email' },
       loginWithOtp: { title: 'Login with OTP', subtitle: 'Enter your email to receive OTP' },
       otpLogin: { title: 'Verify OTP', subtitle: 'Enter the code sent to your email' },
     };
 
+
     const header = headers[currentState];
     if (!header.title) return null;
+
 
     return (
       <div className="auth-form-header" data-aos="fade-down" data-aos-duration="800" data-aos-delay="500">
@@ -245,6 +370,7 @@ const Auth = () => {
       </div>
     );
   };
+
 
   return (
     <div className="auth-page-wrapper">
@@ -255,6 +381,7 @@ const Auth = () => {
         <div className="auth-floating-shape"></div>
         <div className="auth-floating-shape"></div>
       </div>
+
 
       {/* Login Container */}
       <div className="auth-login-container auth-page-transition" data-aos="fade-up" data-aos-duration="800">
@@ -270,6 +397,7 @@ const Auth = () => {
             ></dotlottie-wc>
           </div>
 
+
           <div className="auth-brand-info" data-aos="fade-up" data-aos-duration="1000" data-aos-delay="600">
             <div className="auth-brand-logo">
               <i className="fas fa-boxes"></i>
@@ -283,9 +411,11 @@ const Auth = () => {
           </div>
         </div>
 
+
         {/* Right Side - Form Section */}
         <div className="auth-form-section" data-aos="fade-left" data-aos-duration="1000" data-aos-delay="300">
           {renderFormHeader()}
+
 
           {/* LOGIN FORM */}
           {currentState === 'login' && (
@@ -303,6 +433,7 @@ const Auth = () => {
                 />
                 <i className="fas fa-envelope auth-input-icon"></i>
               </div>
+
 
               <div className="auth-form-group" data-aos="fade-up" data-aos-duration="600" data-aos-delay="800">
                 <label htmlFor="password" className="auth-form-label">Password</label>
@@ -324,6 +455,7 @@ const Auth = () => {
                   <i className={`fas ${showLoginPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
                 </button>
               </div>
+
 
               <div className="auth-form-options" data-aos="fade-up" data-aos-duration="600" data-aos-delay="900">
                 <label className="auth-remember-me">
@@ -350,6 +482,7 @@ const Auth = () => {
                 </a>
               </div>
 
+
               <button
                 type="submit"
                 className={`auth-btn-primary ${isLoading ? 'auth-loading' : ''}`}
@@ -365,12 +498,70 @@ const Auth = () => {
                 </span>
               </button>
 
+
               <div className="auth-demo-info" data-aos="fade-up" data-aos-duration="600" data-aos-delay="1100">
                 <p><strong>Demo Credentials:</strong></p>
                 <p>Email: <strong>admin@gmail.com</strong> | Password: <strong>Admin@123</strong></p>
               </div>
             </form>
           )}
+
+
+          {/* NEW: PASSWORD LOGIN OTP VERIFICATION FORM */}
+          {currentState === 'passwordLoginOtp' && (
+            <form className="auth-otp-verification-form" onSubmit={handleVerifyPasswordLoginOtp}>
+              <div className="auth-otp-info-text">
+                <p>We've sent a 6-digit verification code to</p>
+                <p className="auth-otp-email"><strong>{userEmail}</strong></p>
+              </div>
+
+
+              <div className="auth-form-group">
+                <label className="auth-form-label">Enter OTP</label>
+                <div className="auth-otp-inputs">
+                  {passwordLoginOtpValues.map((value, index) => (
+                    <input
+                      key={index}
+                      ref={(el) => (passwordLoginOtpInputRefs.current[index] = el)}
+                      type="text"
+                      maxLength="1"
+                      className="auth-otp-input"
+                      value={value}
+                      onChange={(e) => handlePasswordLoginOtpChange(index, e.target.value)}
+                      onKeyDown={(e) => handlePasswordLoginOtpKeyDown(index, e)}
+                      autoComplete="off"
+                    />
+                  ))}
+                </div>
+              </div>
+
+
+              <div className="auth-resend-section">
+                <p className="auth-resend-text">
+                  Didn't receive code?{' '}
+                  <button type="button" className="auth-resend-link" onClick={handleResendPasswordLoginOtp}>
+                    Resend OTP
+                  </button>
+                </p>
+              </div>
+
+
+              <button type="submit" className={`auth-btn-primary ${isLoading ? 'auth-loading' : ''}`} disabled={isLoading}>
+                <div className="auth-spinner"></div>
+                <span className="auth-button-text">
+                  <i className="fas fa-check-circle"></i>
+                  Verify & Login
+                </span>
+              </button>
+
+
+              <button type="button" className="auth-btn-secondary" onClick={handleBackToLoginFromPasswordOtp}>
+                <i className="fas fa-arrow-left"></i>
+                Back to Login
+              </button>
+            </form>
+          )}
+
 
           {/* LOGIN WITH OTP FORM - Enter Email */}
           {currentState === 'loginWithOtp' && (
@@ -389,6 +580,7 @@ const Auth = () => {
                 <i className="fas fa-envelope auth-input-icon"></i>
               </div>
 
+
               <button type="submit" className={`auth-btn-primary ${isLoading ? 'auth-loading' : ''}`} disabled={isLoading}>
                 <div className="auth-spinner"></div>
                 <span className="auth-button-text">
@@ -397,12 +589,14 @@ const Auth = () => {
                 </span>
               </button>
 
+
               <button type="button" className="auth-btn-secondary" onClick={handleBackToLogin}>
                 <i className="fas fa-arrow-left"></i>
                 Back to Login
               </button>
             </form>
           )}
+
 
           {/* OTP LOGIN FORM - Verify OTP */}
           {currentState === 'otpLogin' && (
@@ -411,6 +605,7 @@ const Auth = () => {
                 <p>We've sent a 6-digit verification code to</p>
                 <p className="auth-otp-email"><strong>{userEmail}</strong></p>
               </div>
+
 
               <div className="auth-form-group">
                 <label className="auth-form-label">Enter OTP</label>
@@ -431,6 +626,7 @@ const Auth = () => {
                 </div>
               </div>
 
+
               <div className="auth-resend-section">
                 <p className="auth-resend-text">
                   Didn't receive code?{' '}
@@ -440,6 +636,7 @@ const Auth = () => {
                 </p>
               </div>
 
+
               <button type="submit" className={`auth-btn-primary ${isLoading ? 'auth-loading' : ''}`} disabled={isLoading}>
                 <div className="auth-spinner"></div>
                 <span className="auth-button-text">
@@ -447,6 +644,7 @@ const Auth = () => {
                   Login with OTP
                 </span>
               </button>
+
 
               <button type="button" className="auth-btn-secondary" onClick={handleBackToLogin}>
                 <i className="fas fa-arrow-left"></i>
@@ -457,6 +655,7 @@ const Auth = () => {
         </div>
       </div>
 
+
       {/* Toast Notification */}
       <div className={`auth-toast ${toast.type} ${toast.show ? 'auth-show' : ''}`}>
         <i className={`fas ${toast.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`}></i>
@@ -465,5 +664,6 @@ const Auth = () => {
     </div>
   );
 };
+
 
 export default Auth;

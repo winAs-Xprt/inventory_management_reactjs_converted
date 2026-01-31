@@ -286,13 +286,13 @@ const CategoryDetailModal = ({ isOpen, onClose, category, products }) => {
               <i className="fas fa-times"></i>
               Close
             </button>
-            <button
+            {/* <button
               onClick={() => window.print()}
               className="flex-1 px-5 py-3 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-md text-sm font-semibold cursor-pointer hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
             >
               <i className="fas fa-print"></i>
               Print Details
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
@@ -1429,14 +1429,14 @@ const ProductModal = ({ isOpen, onClose, product, onSave, categories, vendors, u
               <i className="fas fa-times"></i>
               Cancel
             </button>
-            <button
+            {/* <button
               type="submit"
               form="productForm"
               className="flex-1 px-5 py-3 bg-teal-500 text-white rounded-md text-sm font-semibold cursor-pointer hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
             >
               <i className="fas fa-save"></i>
               Save Product
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
@@ -1796,13 +1796,13 @@ const Product = () => {
               <i className="fas fa-file-upload"></i>
               Bulk Import
             </button>
-            <button
+            {/* <button
               onClick={() => showToast('Data refreshed', 'success')}
               className="px-4 py-2.5 bg-gradient-to-r from-teal-400 to-teal-700 text-white rounded-md text-sm font-semibold hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 flex items-center gap-2"
             >
               <i className="fas fa-sync-alt"></i>
               Refresh
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
