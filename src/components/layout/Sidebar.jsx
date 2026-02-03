@@ -12,9 +12,9 @@ const Sidebar = ({ isOpen, toggleSidebar, onLogout }) => {
     { path: '/purchase', icon: 'fa-shopping-cart', label: 'Purchase' },
     { path: '/inventory', icon: 'fa-warehouse', label: 'Inventory' },
     { path: '/scrap', icon: 'fa-recycle', label: 'Scrap Management' },
-    { path: '#/maintenance', icon: 'fa-tools', label: 'Maintenance' },
+    { path: '/maintenance', icon: 'fa-tools', label: 'Maintenance' },
     { path: '#/reports', icon: 'fa-file-alt', label: 'Reports' },
-    { path: '#/users', icon: 'fa-users-cog', label: 'User Management' },
+    { path: '/users', icon: 'fa-users-cog', label: 'User Management' },
     { path: '/settings', icon: 'fa-cog', label: 'Settings' },
   ];
 

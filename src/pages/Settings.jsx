@@ -1,5 +1,5 @@
 // src/pages/Settings.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 // ==========================================================================
 // TOAST NOTIFICATION COMPONENT
@@ -89,7 +89,8 @@ const Modal = ({ isOpen, onClose, title, icon, children, size = 'md' }) => {
   const sizeClasses = {
     sm: 'max-w-md',
     md: 'max-w-2xl',
-    lg: 'max-w-4xl'
+    lg: 'max-w-4xl',
+    xl: 'max-w-6xl'
   };
 
   return (
@@ -119,6 +120,20 @@ const Modal = ({ isOpen, onClose, title, icon, children, size = 'md' }) => {
 };
 
 // ==========================================================================
+// LOADING SKELETON COMPONENT
+// ==========================================================================
+const SettingSkeleton = () => (
+  <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4 animate-pulse">
+    <div className="w-12 h-12 bg-gray-200 rounded-xl flex-shrink-0"></div>
+    <div className="flex-1">
+      <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+    </div>
+    <div className="w-6 h-6 bg-gray-200 rounded"></div>
+  </div>
+);
+
+// ==========================================================================
 // MAIN SETTINGS COMPONENT
 // ==========================================================================
 const Settings = () => {
@@ -130,15 +145,17 @@ const Settings = () => {
     confirm: false
   });
 
-  // Modal states
   const [modals, setModals] = useState({
     userInfo: false,
     changePassword: false,
     privacyPolicy: false,
-    terms: false
+    terms: false,
+    companySettings: false,
+    emailSettings: false,
+    notificationSettings: false,
+    locationSettings: false
   });
 
-  // Confirm modal state
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
     title: '',
@@ -147,14 +164,12 @@ const Settings = () => {
     type: 'warning'
   });
 
-  // Form states
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
 
-  // User data (Mock - Replace with actual API/Context)
   const [userData] = useState({
     name: 'Admin',
     role: 'ADMIN',
@@ -164,26 +179,192 @@ const Settings = () => {
     department: 'IT Department'
   });
 
-  // Toast state
   const [toast, setToast] = useState({
     show: false,
     message: '',
     type: 'success'
   });
 
+  const [loading, setLoading] = useState(true);
+  const [settings, setSettings] = useState({});
+  const [editableSettings, setEditableSettings] = useState({});
+
+  // ========== FETCH SETTINGS ON MOUNT ==========
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      setLoading(true);
+      // Replace with your actual API endpoint
+      // const response = await fetch('/api/settings');
+      // const data = await response.json();
+      
+      // Mock data for demonstration
+      const data = {
+        data: [
+          {
+            key: "COMPANY_ADDRESS",
+            value: "123 Business Street, City, State, 12345",
+            description: "Company address",
+            category: "COMPANY",
+            isEditable: true,
+            updatedAt: "2026-02-01T18:58:20.622Z"
+          },
+          {
+            key: "COMPANY_EMAIL",
+            value: "info@company.com",
+            description: "Company email address",
+            category: "COMPANY",
+            isEditable: true,
+            updatedAt: "2026-02-01T18:58:20.629Z"
+          },
+          {
+            key: "COMPANY_GSTIN",
+            value: "",
+            description: "Company GSTIN/VAT number",
+            category: "COMPANY",
+            isEditable: true,
+            updatedAt: "2026-02-01T18:58:20.632Z"
+          },
+          {
+            key: "COMPANY_NAME",
+            value: "Inventory Management System",
+            description: "Company/Organization name",
+            category: "COMPANY",
+            isEditable: true,
+            updatedAt: "2026-02-01T18:58:20.616Z"
+          },
+          {
+            key: "COMPANY_PHONE",
+            value: "+1-234-567-8900",
+            description: "Company phone number",
+            category: "COMPANY",
+            isEditable: true,
+            updatedAt: "2026-02-01T18:58:20.626Z"
+          },
+          {
+            key: "COMPANY_WEBSITE",
+            value: "https://yourcompany.com",
+            description: "Company website URL",
+            category: "COMPANY",
+            isEditable: true,
+            updatedAt: "2026-02-01T18:58:20.635Z"
+          },
+          {
+            key: "EMAIL_FROM_NAME",
+            value: "Inventory Management System",
+            description: "Sender name for system emails",
+            category: "EMAIL",
+            isEditable: true,
+            updatedAt: "2026-02-01T18:58:20.642Z"
+          },
+          {
+            key: "EMAIL_SUPPORT",
+            value: "support@company.com",
+            description: "Support email address",
+            category: "EMAIL",
+            isEditable: true,
+            updatedAt: "2026-02-01T18:58:20.638Z"
+          },
+          {
+            key: "ENABLE_EMAIL_NOTIFICATIONS",
+            value: "true",
+            description: "Enable email notifications",
+            category: "NOTIFICATION",
+            isEditable: true,
+            updatedAt: "2026-02-01T18:58:20.649Z"
+          },
+          {
+            key: "ENABLE_STOCK_ALERTS",
+            value: "true",
+            description: "Enable stock level alerts",
+            category: "NOTIFICATION",
+            isEditable: true,
+            updatedAt: "2026-02-01T18:58:20.650Z"
+          },
+          {
+            key: "LATITUDE",
+            value: "40.65471",
+            description: "Default Latitude",
+            category: "LOCATION",
+            isEditable: true,
+            updatedAt: "2026-02-01T18:58:20.644Z"
+          },
+          {
+            key: "LONGITUDE",
+            value: "-74.12347",
+            description: "Longitude",
+            category: "LOCATION",
+            isEditable: true,
+            updatedAt: "2026-02-01T18:58:20.645Z"
+          },
+          {
+            key: "PURCHASE_TEAM_EMAIL",
+            value: "purchase@company.com",
+            description: "Purchase team email for CC",
+            category: "EMAIL",
+            isEditable: true,
+            updatedAt: "2026-02-01T18:58:20.640Z"
+          },
+          {
+            key: "RADIUS_METER",
+            value: "5",
+            description: "Radius in meters",
+            category: "LOCATION",
+            isEditable: true,
+            updatedAt: "2026-02-01T18:58:20.647Z"
+          }
+        ]
+      };
+
+      // Group settings by category
+      const grouped = {};
+      data.data.forEach(item => {
+        if (!grouped[item.category]) {
+          grouped[item.category] = [];
+        }
+        grouped[item.category].push(item);
+      });
+
+      setSettings(grouped);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching settings:', error);
+      showToast('Failed to load settings', 'error');
+      setLoading(false);
+    }
+  };
+
   // ========== MODAL FUNCTIONS ==========
   const openModal = (modalName) => {
     setModals(prev => ({ ...prev, [modalName]: true }));
     document.body.style.overflow = 'hidden';
+    
+    // Initialize editable settings when opening settings modals
+    if (modalName.includes('Settings') && settings[modalName.replace('Settings', '').toUpperCase()]) {
+      const category = modalName.replace('Settings', '').toUpperCase();
+      const categorySettings = settings[category] || [];
+      const initialValues = {};
+      categorySettings.forEach(item => {
+        initialValues[item.key] = item.value;
+      });
+      setEditableSettings(initialValues);
+    }
   };
 
   const closeModal = (modalName) => {
     setModals(prev => ({ ...prev, [modalName]: false }));
     document.body.style.overflow = 'auto';
-    // Reset password form when closing
+    
     if (modalName === 'changePassword') {
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
       setCurrentPasswordMode('change');
+    }
+    
+    if (modalName.includes('Settings')) {
+      setEditableSettings({});
     }
   };
 
@@ -243,6 +424,7 @@ const Settings = () => {
       return;
     }
 
+    // API call here
     showToast('Password updated successfully!', 'success');
     closeModal('changePassword');
   };
@@ -265,8 +447,32 @@ const Settings = () => {
       return;
     }
 
+    // API call here
     showToast('Password reset successfully!', 'success');
     closeModal('changePassword');
+  };
+
+  // ========== SETTINGS UPDATE FUNCTIONS ==========
+  const handleSettingChange = (key, value) => {
+    setEditableSettings(prev => ({ ...prev, [key]: value }));
+  };
+
+  const saveSettings = async (category) => {
+    try {
+      // API call to save settings
+      // const response = await fetch('/api/settings', {
+      //   method: 'PUT',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ category, settings: editableSettings })
+      // });
+
+      showToast('Settings saved successfully!', 'success');
+      closeModal(`${category.toLowerCase()}Settings`);
+      fetchSettings(); // Refresh settings
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      showToast('Failed to save settings', 'error');
+    }
   };
 
   // ========== LOGOUT FUNCTION ==========
@@ -281,6 +487,137 @@ const Settings = () => {
         }, 1000);
       },
       { type: 'warning', confirmText: 'Logout', cancelText: 'Cancel' }
+    );
+  };
+
+  // ========== HELPER FUNCTIONS ==========
+  const getCategoryIcon = (category) => {
+    const icons = {
+      COMPANY: 'fa-building',
+      EMAIL: 'fa-envelope',
+      NOTIFICATION: 'fa-bell',
+      LOCATION: 'fa-map-marker-alt'
+    };
+    return icons[category] || 'fa-cog';
+  };
+
+  const getCategoryColor = (category) => {
+    const colors = {
+      COMPANY: 'text-blue-500',
+      EMAIL: 'text-purple-500',
+      NOTIFICATION: 'text-orange-500',
+      LOCATION: 'text-green-500'
+    };
+    return colors[category] || 'text-teal-500';
+  };
+
+  const getCategoryBg = (category) => {
+    const colors = {
+      COMPANY: 'bg-blue-50',
+      EMAIL: 'bg-purple-50',
+      NOTIFICATION: 'bg-orange-50',
+      LOCATION: 'bg-green-50'
+    };
+    return colors[category] || 'bg-teal-50';
+  };
+
+  const formatCategoryName = (category) => {
+    return category.charAt(0) + category.slice(1).toLowerCase().replace('_', ' ');
+  };
+
+  // ========== RENDER INPUT BASED ON TYPE ==========
+  const renderSettingInput = (setting) => {
+    const value = editableSettings[setting.key] !== undefined ? editableSettings[setting.key] : setting.value;
+
+    if (setting.key.startsWith('ENABLE_')) {
+      return (
+        <div className="flex items-center gap-3">
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={value === 'true' || value === true}
+              onChange={(e) => handleSettingChange(setting.key, e.target.checked ? 'true' : 'false')}
+              className="sr-only peer"
+              disabled={!setting.isEditable}
+            />
+            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-500"></div>
+          </label>
+          <span className="text-sm font-medium text-gray-700">
+            {value === 'true' || value === true ? 'Enabled' : 'Disabled'}
+          </span>
+        </div>
+      );
+    }
+
+    if (setting.key.includes('EMAIL')) {
+      return (
+        <input
+          type="email"
+          value={value}
+          onChange={(e) => handleSettingChange(setting.key, e.target.value)}
+          disabled={!setting.isEditable}
+          className="w-full py-2.5 px-4 border-2 border-gray-300 rounded-lg text-sm outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+        />
+      );
+    }
+
+    if (setting.key.includes('PHONE')) {
+      return (
+        <input
+          type="tel"
+          value={value}
+          onChange={(e) => handleSettingChange(setting.key, e.target.value)}
+          disabled={!setting.isEditable}
+          className="w-full py-2.5 px-4 border-2 border-gray-300 rounded-lg text-sm outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+        />
+      );
+    }
+
+    if (setting.key.includes('WEBSITE')) {
+      return (
+        <input
+          type="url"
+          value={value}
+          onChange={(e) => handleSettingChange(setting.key, e.target.value)}
+          disabled={!setting.isEditable}
+          className="w-full py-2.5 px-4 border-2 border-gray-300 rounded-lg text-sm outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+        />
+      );
+    }
+
+    if (setting.key.includes('LATITUDE') || setting.key.includes('LONGITUDE') || setting.key.includes('RADIUS')) {
+      return (
+        <input
+          type="number"
+          step="any"
+          value={value}
+          onChange={(e) => handleSettingChange(setting.key, e.target.value)}
+          disabled={!setting.isEditable}
+          className="w-full py-2.5 px-4 border-2 border-gray-300 rounded-lg text-sm outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+        />
+      );
+    }
+
+    if (setting.key.includes('ADDRESS')) {
+      return (
+        <textarea
+          value={value}
+          onChange={(e) => handleSettingChange(setting.key, e.target.value)}
+          disabled={!setting.isEditable}
+          rows={3}
+          className="w-full py-2.5 px-4 border-2 border-gray-300 rounded-lg text-sm outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all resize-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+        />
+      );
+    }
+
+    return (
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => handleSettingChange(setting.key, e.target.value)}
+        disabled={!setting.isEditable}
+        className="w-full py-2.5 px-4 border-2 border-gray-300 rounded-lg text-sm outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-100 transition-all disabled:bg-gray-100 disabled:cursor-not-allowed"
+      />
     );
   };
 
@@ -319,6 +656,41 @@ const Settings = () => {
               </div>
               <i className="fas fa-chevron-right text-gray-400"></i>
             </div>
+          </div>
+        </div>
+
+        {/* Application Settings Section */}
+        <div>
+          <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <i className="fas fa-sliders-h text-teal-500"></i>
+            Application Settings
+          </h2>
+          <div className="space-y-3">
+            {loading ? (
+              <>
+                <SettingSkeleton />
+                <SettingSkeleton />
+                <SettingSkeleton />
+                <SettingSkeleton />
+              </>
+            ) : (
+              Object.keys(settings).map((category) => (
+                <div
+                  key={category}
+                  onClick={() => openModal(`${category.toLowerCase()}Settings`)}
+                  className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4 cursor-pointer hover:border-teal-400 hover:shadow-md hover:translate-x-1 transition-all duration-200"
+                >
+                  <div className={`w-12 h-12 ${getCategoryBg(category)} rounded-xl flex items-center justify-center flex-shrink-0`}>
+                    <i className={`fas ${getCategoryIcon(category)} ${getCategoryColor(category)} text-xl`}></i>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-800 text-sm">{formatCategoryName(category)} Settings</h3>
+                    <p className="text-xs text-gray-500">{settings[category].length} configuration{settings[category].length > 1 ? 's' : ''}</p>
+                  </div>
+                  <i className="fas fa-chevron-right text-gray-400"></i>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
@@ -449,6 +821,64 @@ const Settings = () => {
         </div>
       </Modal>
 
+      {/* Dynamic Settings Modals */}
+      {Object.keys(settings).map((category) => (
+        <Modal
+          key={category}
+          isOpen={modals[`${category.toLowerCase()}Settings`]}
+          onClose={() => closeModal(`${category.toLowerCase()}Settings`)}
+          title={`${formatCategoryName(category)} Settings`}
+          icon={getCategoryIcon(category)}
+          size="lg"
+        >
+          <div className="space-y-6">
+            {settings[category].map((setting) => (
+              <div key={setting.key} className="pb-4 border-b border-gray-200 last:border-0">
+                <div className="flex items-start justify-between gap-4 mb-3">
+                  <div className="flex-1">
+                    <label className="block text-sm font-semibold text-gray-800 mb-1">
+                      {setting.description}
+                    </label>
+                    <p className="text-xs text-gray-500">Key: {setting.key}</p>
+                  </div>
+                  {!setting.isEditable && (
+                    <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded">
+                      Read Only
+                    </span>
+                  )}
+                </div>
+                {renderSettingInput(setting)}
+                <p className="text-xs text-gray-400 mt-2">
+                  Last updated: {new Date(setting.updatedAt).toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex gap-3 mt-8 pt-6 border-t border-gray-200">
+            <button
+              onClick={() => closeModal(`${category.toLowerCase()}Settings`)}
+              className="flex-1 px-6 py-3 bg-white text-gray-700 border-2 border-gray-300 rounded-lg text-sm font-bold cursor-pointer hover:bg-gray-50 transition-all duration-200"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => saveSettings(category)}
+              className="flex-1 px-6 py-3 bg-teal-500 hover:bg-teal-600 text-white rounded-lg text-sm font-bold cursor-pointer hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+            >
+              <i className="fas fa-save"></i>
+              Save Changes
+            </button>
+          </div>
+        </Modal>
+      ))}
+
       {/* Change/Reset Password Modal */}
       <Modal
         isOpen={modals.changePassword}
@@ -457,7 +887,6 @@ const Settings = () => {
         icon="fa-lock"
         size="md"
       >
-        {/* Toggle Button */}
         <div className="flex border-2 border-teal-500 rounded-full overflow-hidden mb-6">
           <button
             onClick={() => handlePasswordModeSwitch('change')}
@@ -485,14 +914,12 @@ const Settings = () => {
 
         {currentPasswordMode === 'change' ? (
           <div>
-            {/* Info Message for Change Password */}
             <div className="bg-cyan-50 border-l-4 border-cyan-500 p-4 rounded-md mb-6 flex items-center gap-3">
               <i className="fas fa-info-circle text-cyan-500 text-lg"></i>
               <span className="text-sm text-gray-700">Enter your current password to change it</span>
             </div>
 
             <div className="space-y-4">
-              {/* Current Password */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Current Password</label>
                 <div className="relative">
@@ -513,7 +940,6 @@ const Settings = () => {
                 </div>
               </div>
 
-              {/* New Password */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">New Password</label>
                 <div className="relative">
@@ -534,7 +960,6 @@ const Settings = () => {
                 </div>
               </div>
 
-              {/* Confirm New Password */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Confirm New Password</label>
                 <div className="relative">
@@ -556,7 +981,6 @@ const Settings = () => {
               </div>
             </div>
 
-            {/* Action Buttons */}
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => closeModal('changePassword')}
@@ -574,14 +998,12 @@ const Settings = () => {
           </div>
         ) : (
           <div>
-            {/* Warning Message for Reset Password */}
             <div className="bg-orange-50 border-l-4 border-orange-500 p-4 rounded-md mb-6 flex items-center gap-3">
               <i className="fas fa-exclamation-triangle text-orange-500 text-lg"></i>
               <span className="text-sm text-gray-700">Set a new password without current password</span>
             </div>
 
             <div className="space-y-4">
-              {/* New Password */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">New Password</label>
                 <div className="relative">
@@ -602,7 +1024,6 @@ const Settings = () => {
                 </div>
               </div>
 
-              {/* Confirm New Password */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Confirm New Password</label>
                 <div className="relative">
@@ -624,7 +1045,6 @@ const Settings = () => {
               </div>
             </div>
 
-            {/* Password Requirements */}
             <div className="bg-cyan-50 border border-cyan-200 rounded-lg p-4 mt-4">
               <div className="flex items-start gap-2 mb-2">
                 <i className="fas fa-shield-alt text-cyan-500 mt-0.5"></i>
@@ -635,7 +1055,6 @@ const Settings = () => {
               </ul>
             </div>
 
-            {/* Action Buttons */}
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => closeModal('changePassword')}

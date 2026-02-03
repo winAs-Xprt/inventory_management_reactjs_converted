@@ -1,4 +1,4 @@
-// src/pages/InventoryModals.jsx
+// src/modals/InventoryModals.jsx
 import React, { useEffect } from 'react';
 
 const InventoryModals = ({
@@ -50,7 +50,7 @@ const InventoryModals = ({
           </div>
 
           {/* Modal Body */}
-          <div className="px-6 py-6 max-h-[calc(90vh-200px)] overflow-y-auto">
+          <div className="px-6 py-6 max-h-[calc(90vh-80px)] overflow-y-auto">
             {/* Product Info Section */}
             <div className="bg-gray-50 rounded-xl p-5 mb-5 border-l-4 border-teal-400">
               <h3 className="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
@@ -214,21 +214,6 @@ const InventoryModals = ({
                 </div>
               </div>
             )}
-          </div>
-
-          {/* Modal Footer */}
-          <div className="px-6 py-5 bg-gray-50 border-t-2 border-gray-200 flex justify-end gap-3">
-            <button
-              onClick={() => setShowDetailModal(false)}
-              className="px-5 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-md font-semibold text-sm flex items-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
-            >
-              <i className="fas fa-times"></i>
-              Close
-            </button>
-            <button className="px-5 py-3 bg-gradient-to-br from-teal-400 to-teal-700 hover:from-teal-500 hover:to-teal-800 text-white rounded-md font-semibold text-sm flex items-center gap-2 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
-              <i className="fas fa-print"></i>
-              Print
-            </button>
           </div>
         </div>
       </div>

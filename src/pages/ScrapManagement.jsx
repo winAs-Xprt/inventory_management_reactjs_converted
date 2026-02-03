@@ -19,7 +19,9 @@ const ScrapManagement = () => {
     dateFilters,
     setDateFilters,
     getFilteredRecords,
-    resetFilters
+    resetFilters,
+    addScrapInRecord,
+    addScrapOutRecord
   } = useScrapData();
 
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -29,8 +31,17 @@ const ScrapManagement = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmConfig, setConfirmConfig] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
+  const [toast, setToast] = useState({ show: false, message: '', type: '' });
 
   const filteredRecords = getFilteredRecords();
+
+  // Toast Function
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast({ show: false, message: '', type: '' });
+    }, 3000);
+  };
 
   // Pagination logic
   const totalPages = Math.ceil(filteredRecords.length / ITEMS_PER_PAGE);
@@ -89,6 +100,22 @@ const ScrapManagement = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-gray-50 to-cyan-50 p-5">
+      {/* Toast Notification */}
+      {toast.show && (
+        <div className={`fixed top-5 right-5 z-[10001] px-5 py-3 rounded-lg shadow-lg flex items-center gap-3 animate-slideIn ${
+          toast.type === 'success' ? 'bg-green-500' :
+          toast.type === 'error' ? 'bg-red-500' :
+          toast.type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+        } text-white font-semibold text-sm`}>
+          <i className={`fas fa-${
+            toast.type === 'success' ? 'check-circle' :
+            toast.type === 'error' ? 'exclamation-circle' :
+            toast.type === 'warning' ? 'exclamation-triangle' : 'info-circle'
+          } text-lg`}></i>
+          {toast.message}
+        </div>
+      )}
+
       <div className="max-w-[1600px] mx-auto">
         
         {/* Page Header */}
@@ -406,6 +433,9 @@ const ScrapManagement = () => {
         setShowConfirmModal={setShowConfirmModal}
         confirmConfig={confirmConfig}
         formatDate={formatDate}
+        addScrapInRecord={addScrapInRecord}
+        addScrapOutRecord={addScrapOutRecord}
+        showToast={showToast}
       />
     </div>
   );

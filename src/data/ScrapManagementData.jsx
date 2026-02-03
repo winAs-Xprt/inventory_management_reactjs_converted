@@ -1,4 +1,4 @@
-// src/pages/ScrapManagementData.jsx
+// src/data/ScrapManagementData.jsx
 import { useState, useMemo } from 'react';
 
 // Mock data
@@ -177,8 +177,34 @@ const AVAILABLE_SCRAP_ITEMS = [
   { id: 'SCR-W-004', productName: 'Steel Bolt M8', productCode: 'PRD-001', quantity: 50 }
 ];
 
+// Available Products for selection
+export const AVAILABLE_PRODUCTS = [
+  { code: 'PRD-001', name: 'Steel Bolt M8' },
+  { code: 'PRD-002', name: 'Electric Motor 2HP' },
+  { code: 'PRD-003', name: 'Hydraulic Pump' },
+  { code: 'PRD-004', name: 'V-Belt Type A' },
+  { code: 'PRD-005', name: 'Bearing 6205' },
+  { code: 'PRD-042', name: 'Damaged Cable Roll' }
+];
+
+// Available Vendors
+export const AVAILABLE_VENDORS = [
+  { id: 'VND-001', name: 'EcoRecycle Pvt Ltd' },
+  { id: 'VND-002', name: 'Green Disposal Partners' },
+  { id: 'VND-003', name: 'Waste Management Corp' },
+  { id: 'VND-004', name: 'Scrap Solutions India' }
+];
+
+// Available Plants
+export const AVAILABLE_PLANTS = [
+  'Chennai Plant',
+  'Bangalore Plant',
+  'Mumbai Plant',
+  'Delhi Plant'
+];
+
 export const useScrapData = () => {
-  const [scrapRecords] = useState(SCRAP_RECORDS);
+  const [scrapRecords, setScrapRecords] = useState(SCRAP_RECORDS);
   const [availableScrapItems] = useState(AVAILABLE_SCRAP_ITEMS);
   const [currentTypeFilter, setCurrentTypeFilter] = useState('all');
   const [currentStatusFilter, setCurrentStatusFilter] = useState('all');
@@ -187,6 +213,66 @@ export const useScrapData = () => {
     fromDate: '',
     toDate: ''
   });
+
+  // Generate Scrap ID
+  const generateScrapId = () => {
+    const year = new Date().getFullYear();
+    const lastRecord = scrapRecords[0];
+    const lastNumber = lastRecord ? parseInt(lastRecord.id.split('-')[2]) : 0;
+    return `SCR-${year}-${String(lastNumber + 1).padStart(3, '0')}`;
+  };
+
+  // Add Scrap In Record
+  const addScrapInRecord = (formData) => {
+    const newRecord = {
+      id: generateScrapId(),
+      type: 'Scrap In',
+      productName: formData.productName,
+      productCode: formData.productCode,
+      fromTo: formData.fromPerson,
+      plant: formData.plant,
+      quantity: parseInt(formData.quantity),
+      condition: formData.condition,
+      workingPercentage: parseInt(formData.workingPercentage) || 0,
+      runtimeHours: parseInt(formData.runtimeHours) || 0,
+      status: 'In Warehouse',
+      date: new Date().toISOString().split('T')[0],
+      remarks: formData.remarks || '',
+      receivedBy: 'Kumar - Storekeeper',
+      proofImage: formData.proofImage?.name || null
+    };
+
+    setScrapRecords([newRecord, ...scrapRecords]);
+    return true;
+  };
+
+  // Add Scrap Out Record
+  const addScrapOutRecord = (formData, items) => {
+    const vendor = AVAILABLE_VENDORS.find(v => v.id === formData.vendor);
+    
+    const newRecords = items.map((item, index) => {
+      const product = AVAILABLE_PRODUCTS.find(p => p.code === item.productCode);
+      return {
+        id: index === 0 ? generateScrapId() : `${generateScrapId()}-${index}`,
+        type: 'Scrap Out',
+        productName: product?.name || item.productName,
+        productCode: item.productCode,
+        fromTo: vendor?.name || formData.vendor,
+        quantity: parseInt(item.quantity),
+        condition: 'Disposed',
+        workingPercentage: 0,
+        status: 'Disposed',
+        date: new Date().toISOString().split('T')[0],
+        remarks: formData.remarks || '',
+        vehicleNumber: formData.vehicleNumber,
+        driverName: formData.driverName,
+        proofImage: formData.proofImage?.name || null
+      };
+    });
+
+    setScrapRecords([...newRecords, ...scrapRecords]);
+    return true;
+  };
 
   // Calculate stats
   const stats = useMemo(() => {
@@ -303,6 +389,8 @@ export const useScrapData = () => {
     dateFilters,
     setDateFilters,
     getFilteredRecords,
-    resetFilters
+    resetFilters,
+    addScrapInRecord,
+    addScrapOutRecord
   };
 };
