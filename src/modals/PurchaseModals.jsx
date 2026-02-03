@@ -319,15 +319,14 @@ const PurchaseModals = ({
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Purchase Remarks <span className="text-red-500">*</span>
+                      Purchase Remarks <span className="text-gray-400 text-xs">(Optional)</span>
                     </label>
                     <textarea
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all resize-none"
                       value={poForm.remarks}
                       onChange={(e) => setPOForm({...poForm, remarks: e.target.value})}
-                      placeholder="Enter purchase remarks, special instructions..."
+                      placeholder="Enter purchase remarks, special instructions... (optional)"
                       rows="3"
-                      required
                     />
                   </div>
                 </div>
@@ -335,23 +334,65 @@ const PurchaseModals = ({
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-end px-6 py-4 border-t border-gray-200 bg-gray-50 gap-3">
-              <button
-                type="button"
-                onClick={() => setShowCreatePOModal(false)}
-                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-2"
-              >
-                <i className="fas fa-times"></i> Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleCreatePO}
-                className="px-6 py-2 bg-gradient-to-r from-teal-400 to-teal-700 text-white rounded-lg hover:from-teal-500 hover:to-teal-800 transition-all flex items-center gap-2 shadow-md"
-              >
-                <i className="fas fa-check"></i> Create Purchase Order
-              </button>
-            </div>
-          </div>
+            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50">
+              {/* Left side - Communication Method Selector */}
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-gray-600">Send via:</span>
+                <div className="flex gap-2">
+                  {/* WhatsApp Option */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const currentWhatsApp = poForm.sendViaWhatsApp || false;
+                      setPOForm({...poForm, sendViaWhatsApp: !currentWhatsApp});
+                    }}
+                    className={`px-4 py-2 rounded-lg border-2 transition-all flex items-center gap-2 text-sm font-medium ${
+                      poForm.sendViaWhatsApp
+                        ? 'bg-green-500 text-white border-green-600 shadow-md'
+                        : 'bg-white text-gray-700 border-gray-300 hover:border-green-400 hover:bg-green-50'
+                    }`}
+                  >
+                    <i className={`fab fa-whatsapp text-lg ${poForm.sendViaWhatsApp ? '' : 'text-green-500'}`}></i>
+                    <span>WhatsApp</span>
+                  </button>
+
+                  {/* Email Option */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const currentEmail = poForm.sendViaEmail || false;
+                      setPOForm({...poForm, sendViaEmail: !currentEmail});
+                    }}
+                    className={`px-4 py-2 rounded-lg border-2 transition-all flex items-center gap-2 text-sm font-medium ${
+                      poForm.sendViaEmail
+                        ? 'bg-blue-500 text-white border-blue-600 shadow-md'
+                        : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400 hover:bg-blue-50'
+                    }`}
+                  >
+                    <i className={`fas fa-envelope text-lg ${poForm.sendViaEmail ? '' : 'text-blue-500'}`}></i>
+                    <span>Email</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Right side - Action Buttons */}
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowCreatePOModal(false)}
+                  className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-2"
+                >
+                  <i className="fas fa-times"></i> Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCreatePO}
+                  className="px-6 py-2 bg-gradient-to-r from-teal-400 to-teal-700 text-white rounded-lg hover:from-teal-500 hover:to-teal-800 transition-all flex items-center gap-2 shadow-md"
+                >
+                  <i className="fas fa-check"></i> Create Purchase Order
+                </button>
+              </div>
+            </div>          </div>
         </div>
       )}
 
@@ -566,9 +607,8 @@ const PurchaseModals = ({
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all resize-none"
                     value={poForm.remarks}
                     onChange={(e) => setPOForm({...poForm, remarks: e.target.value})}
-                    placeholder="Enter purchase remarks..."
+                    placeholder="Enter purchase remarks... (optional)"
                     rows="3"
-                    required
                   />
                 </div>
 
@@ -1153,7 +1193,7 @@ const PurchaseModals = ({
 
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Reason for Rescheduling <span className="text-red-500">*</span>
+                  Reason for Rescheduling <span className="text-gray-400 text-xs">(Optional)</span>
                 </label>
                 <textarea
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 resize-none"
@@ -1230,7 +1270,7 @@ const PurchaseModals = ({
         {/* Reason - 8 OPTIONS */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Reason <span className="text-red-500">*</span>
+            Reason <span className="text-gray-400 text-xs">(Optional)</span>
           </label>
           <select
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500"
@@ -1303,7 +1343,7 @@ const PurchaseModals = ({
         {/* Detailed Remarks */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Detailed Remarks <span className="text-red-500">*</span>
+            Detailed Remarks <span className="text-gray-400 text-xs">(Optional)</span>
           </label>
           <textarea
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 resize-none"
