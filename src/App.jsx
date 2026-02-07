@@ -12,6 +12,7 @@ import VendorManagement from './pages/Vendor';
 import ProductManagement from './pages/Product';
 import PurchaseManagement from './pages/Purchase';
 import InventoryManagement from './pages/Inventory';
+import ReturnReplacement from './pages/ReturnReplacement';
 import ScrapManagement from './pages/ScrapManagement';
 import MaintenanceManagement from './pages/Maintenance';
 import ReportsManagement from './pages/Reports';
@@ -139,6 +140,17 @@ function App() {
           <ProtectedRoute>
             <LayoutWithSidebar>
               <InventoryManagement />
+            </LayoutWithSidebar>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/return-replacement"
+        element={
+          <ProtectedRoute>
+            <LayoutWithSidebar>
+              <ReturnReplacement />
             </LayoutWithSidebar>
           </ProtectedRoute>
         }

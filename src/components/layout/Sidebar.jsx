@@ -1,4 +1,4 @@
-// src/components/Sidebar.jsx
+// src/components/layout/Sidebar.jsx
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -11,9 +11,10 @@ const Sidebar = ({ isOpen, toggleSidebar, onLogout }) => {
     { path: '/product', icon: 'fa-box', label: 'Products' },
     { path: '/purchase', icon: 'fa-shopping-cart', label: 'Purchase' },
     { path: '/inventory', icon: 'fa-warehouse', label: 'Inventory' },
+    { path: '/return-replacement', icon: 'fa-undo', label: 'Return & Replacement' },
     { path: '/scrap', icon: 'fa-recycle', label: 'Scrap Management' },
     { path: '/maintenance', icon: 'fa-tools', label: 'Maintenance' },
-    { path: '#/reports', icon: 'fa-file-alt', label: 'Reports' },
+    { path: '/reports', icon: 'fa-file-alt', label: 'Reports' },
     { path: '/users', icon: 'fa-users-cog', label: 'User Management' },
     { path: '/settings', icon: 'fa-cog', label: 'Settings' },
   ];
@@ -21,8 +22,9 @@ const Sidebar = ({ isOpen, toggleSidebar, onLogout }) => {
   return (
     <>
       <aside
-        className={`fixed top-0 left-0 h-screen w-64 bg-white border-r border-gray-200 p-4 z-40 shadow-lg transition-transform duration-300 overflow-y-auto flex flex-col ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-          }`}
+        className={`fixed top-0 left-0 h-screen w-64 bg-white border-r border-gray-200 p-4 z-40 shadow-lg transition-transform duration-300 overflow-y-auto flex flex-col ${
+          isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        }`}
       >
         {/* Logo/Brand Section */}
         <div className="flex items-center justify-center mb-5 pb-4 border-b-2 border-gray-200">
@@ -56,10 +58,11 @@ const Sidebar = ({ isOpen, toggleSidebar, onLogout }) => {
               <li key={item.path}>
                 <Link
                   to={item.path}
-                  className={`flex items-center gap-2.5 px-3.5 py-2.5 no-underline rounded-md text-sm font-medium transition-all duration-200 ${location.pathname === item.path
+                  className={`flex items-center gap-2.5 px-3.5 py-2.5 no-underline rounded-md text-sm font-medium transition-all duration-200 ${
+                    location.pathname === item.path
                       ? 'bg-gradient-to-br from-teal-400 to-teal-700 text-white shadow-md'
                       : 'text-gray-600 hover:bg-cyan-50 hover:text-teal-500 hover:translate-x-1'
-                    }`}
+                  }`}
                   onClick={() => {
                     // Close mobile sidebar on navigation
                     if (window.innerWidth < 1024) {
@@ -85,33 +88,32 @@ const Sidebar = ({ isOpen, toggleSidebar, onLogout }) => {
             <span>Logout</span>
           </button>
         </div>
-
       </aside>
 
       {/* Custom Scrollbar Styles */}
       <style jsx>{`
         aside {
           scrollbar-width: thin;
-          scrollbar-color: #0CC0BC #f1f5f9;
+          scrollbar-color: #0cc0bc #f1f5f9;
         }
-        
+
         aside::-webkit-scrollbar {
           width: 6px;
         }
-        
+
         aside::-webkit-scrollbar-track {
           background: #f1f5f9;
           border-radius: 10px;
         }
-        
+
         aside::-webkit-scrollbar-thumb {
-          background: #0CC0BC;
+          background: #0cc0bc;
           border-radius: 10px;
           border: 1px solid #f1f5f9;
         }
-        
+
         aside::-webkit-scrollbar-thumb:hover {
-          background: #076A70;
+          background: #076a70;
         }
       `}</style>
     </>

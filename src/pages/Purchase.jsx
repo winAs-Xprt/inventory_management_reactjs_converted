@@ -51,7 +51,9 @@ const Purchase = () => {
     vendorId: '',
     purchaseDate: new Date().toISOString().split('T')[0],
     expectedDeliveryDate: '',
-    remarks: ''
+    remarks: '',
+    sendViaWhatsApp: false,
+    sendViaEmail: false 
   });
 
   const [productRows, setProductRows] = useState([
@@ -186,7 +188,9 @@ const Purchase = () => {
       vendorId: '',
       purchaseDate: new Date().toISOString().split('T')[0],
       expectedDeliveryDate: '',
-      remarks: ''
+      remarks: '',
+      sendViaWhatsApp: false,
+      sendViaEmail: false
     });
     setProductRows([{ id: 'row-1', productId: '', quantity: 0, unitPrice: 0, selectedVendors: [] }]);
     setProductSearchTerms({});
@@ -243,7 +247,7 @@ const Purchase = () => {
   };
 
   const handleCreatePO = () => {
-    if (!poForm.expectedDeliveryDate || !poForm.remarks) {
+    if (!poForm.expectedDeliveryDate) {
       showToast('Please fill all required fields', 'error');
       return;
     }
@@ -326,7 +330,7 @@ const Purchase = () => {
   };
 
   const handleUpdatePO = () => {
-    if (!poForm.expectedDeliveryDate || !poForm.remarks) {
+    if (!poForm.expectedDeliveryDate) {
       showToast('Please fill all required fields', 'error');
       return;
     }
@@ -479,7 +483,7 @@ const Purchase = () => {
   };
 
   const handleReschedulePO = () => {
-    if (!rescheduleForm.newExpectedDate || !rescheduleForm.remarks) {
+    if (!rescheduleForm.newExpectedDate) {
       showToast('Please fill all required fields', 'error');
       return;
     }
@@ -538,10 +542,6 @@ const Purchase = () => {
     const selected = returnForm.products.filter(p => p.selected && p.returnQty > 0);
     if (selected.length === 0) {
       showToast('Please select at least one product to return', 'error');
-      return;
-    }
-    if (!returnForm.reason || !returnForm.remarks) {
-      showToast('Please provide reason and detailed remarks', 'error');
       return;
     }
 
